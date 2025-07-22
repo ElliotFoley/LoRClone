@@ -1,3 +1,5 @@
+#include "define.h"
+
 #include "cglm/cglm.h"
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
@@ -122,6 +124,45 @@ unsigned int linkShaders(const char *vertexFileName, const char *fragmentFileNam
 }
 
 
+unsigned int setupCard(unsigned int cardProgram){
+    float cardVertices[] = {
+        0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f, 1.0f, 1.0f
+    };
+
+    unsigned int cardVAO;
+    glGenVertexArrays(1, &cardVAO);
+    unsigned int cardVBO;
+    glGenBuffers(1, &cardVBO);  //Creates buffer for array data
+    glBindVertexArray(cardVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, cardVBO);  //binds buffer to the GL_ARRAY_BUFFER
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cardVertices), cardVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);  //telling the openGL state box how to read the inputVector
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));  //telling the openGL state box how to read the inputVector
+    glEnableVertexAttribArray(1);
+
+    return cardVAO;
+}
+
+
+void drawCard(unsigned int cardProgram, unsigned int cardVAO, float x, float y){
+    mat4 model;
+    vec3 translate = {x, y, 0.0f};
+    glm_mat4_identity(model);
+    glm_translate(model, translate);
+    glm_scale(model, (vec3){200.0f, 300.0f, 1.0f});
+
+    glUniformMatrix4fv(glGetUniformLocation(cardProgram, "model"), 1, GL_FALSE, (float *)model);
+
+    glBindVertexArray(cardVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
 
 int main(){
     glfwInit();
@@ -129,7 +170,7 @@ int main(){
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow *window = glfwCreateWindow(800, 600, "LoR Clone", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "LoR Clone", NULL, NULL);
     if(window == NULL){
         printf("Failed to create GLFW window");
         glfwTerminate();
@@ -142,7 +183,7 @@ int main(){
         return -1;
     }
 
-    glViewport(0, 0, 800, 600);
+    glViewport(0, 0, WIDTH, HEIGHT);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
@@ -166,18 +207,37 @@ int main(){
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));  //telling the openGL state box how to read the inputVector
     glEnableVertexAttribArray(1);
 
-    unsigned int shaderProgram = linkShaders("shaders/backGroundVertex.glsl", "shaders/backGroundFragments.glsl");
-    glUseProgram(shaderProgram);
+    unsigned int backGroundProgram = linkShaders("shaders/backGroundVertex.glsl", "shaders/backGroundFragments.glsl");
+    glUseProgram(backGroundProgram);
 
     unsigned int backGroundTexture = genTexture("textures/Board1.png");
-    glUniform1i(glGetUniformLocation(shaderProgram, "backGroundTexture"), 0);
+    glUniform1i(glGetUniformLocation(backGroundProgram, "backGroundTexture"), 0);
     glBindTexture(GL_TEXTURE_2D, backGroundTexture);
+
+    unsigned int cardProgram = linkShaders("shaders/cardVertex.glsl", "shaders/cardFragments.glsl");
+    glUseProgram(cardProgram);
+    mat4 projection;
+    glm_ortho(0.0f, WIDTH, 0.0f, HEIGHT, -1.0f, 1.0f, projection);
+    unsigned int cardVAO = setupCard(cardProgram);
+    unsigned int cardTexture = genTexture("textures/Orca.png");
+    glUniformMatrix4fv(glGetUniformLocation(cardProgram, "projection"), 1, GL_FALSE, (float*) projection);
+    glUniform1i(glGetUniformLocation(cardProgram, "cardTexture"), 0);
+    glBindTexture(GL_TEXTURE_2D, cardTexture);
 
     while(!glfwWindowShouldClose(window)){
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glDrawArrays(GL_TRIANGLES, 0, 18);
+        glUseProgram(backGroundProgram);
+        glBindTexture(GL_TEXTURE_2D, backGroundTexture);
+        glBindVertexArray(backGroundVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        glUseProgram(cardProgram);
+        glBindTexture(GL_TEXTURE_2D, cardTexture);
+        drawCard(cardProgram, cardVAO, 200.0f, 240.0f);
+        drawCard(cardProgram, cardVAO, 400.0f, 240.0f);
+        drawCard(cardProgram, cardVAO, 600.0f, 240.0f);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

@@ -8,6 +8,12 @@
 #include "stb_image.h"
 
 
+void processInput(GLFWwindow *window, float deltaTime){
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
+        glfwSetWindowShouldClose(window, true);
+    }
+}
+
 
 unsigned int genTexture(char *fullPath){
 
@@ -227,6 +233,8 @@ int main(){
     while(!glfwWindowShouldClose(window)){
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        processInput(window, 0);
 
         glUseProgram(backGroundProgram);
         glBindTexture(GL_TEXTURE_2D, backGroundTexture);

@@ -58,7 +58,7 @@ void framebufferSizeCallback(GLFWwindow *window, int width, int height){
 
 
 char *readShaderFile(const char *fileName){
-    FILE* file = fopen(fileName, "r");
+    FILE* file = fopen(fileName, "rb");
     if(file == NULL){
         printf("uhhhhhhhhhhhhhhhhhhhhh he's right behind isn't he?\n");
     }

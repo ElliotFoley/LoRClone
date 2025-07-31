@@ -1,16 +1,19 @@
-#include "define.h"
-
-#include "cglm/cglm.h"
-#include "glad/glad.h"
-#include <GLFW/glfw3.h>
+#include "main.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 
 void processInput(GLFWwindow *window, float deltaTime){
+    DataWrapper *dataWrapper = glfwGetWindowUserPointer(window);
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
+    }
+    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS){
+        dataWrapper->isClick = 1;
+    }
+    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE){
+        dataWrapper->isClick = 0;
     }
 }
 
@@ -193,6 +196,12 @@ int main(){
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+    DataWrapper dataWrapper = {
+        .isClick = 0
+    };
+
+    glfwSetWindowUserPointer(window, &dataWrapper);
+
     float backGroundVertices[] = {
         -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
         -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
@@ -230,11 +239,15 @@ int main(){
     glUniform1i(glGetUniformLocation(cardProgram, "cardTexture"), 0);
     glBindTexture(GL_TEXTURE_2D, cardTexture);
 
+    double xpos, ypos;
+
     while(!glfwWindowShouldClose(window)){
         //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         processInput(window, 0);
+        glfwGetCursorPos(window, &xpos, &ypos);
+        printf("dataWrapper->isClick: %d\n", dataWrapper.isClick);
 
         glUseProgram(backGroundProgram);
         glBindTexture(GL_TEXTURE_2D, backGroundTexture);

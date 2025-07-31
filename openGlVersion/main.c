@@ -173,6 +173,11 @@ void drawCard(unsigned int cardProgram, unsigned int cardVAO, float x, float y){
 }
 
 
+void drawGameState(){
+
+}
+
+
 int main(){
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -247,7 +252,6 @@ int main(){
 
         processInput(window, 0);
         glfwGetCursorPos(window, &xpos, &ypos);
-        printf("dataWrapper->isClick: %d\n", dataWrapper.isClick);
 
         glUseProgram(backGroundProgram);
         glBindTexture(GL_TEXTURE_2D, backGroundTexture);

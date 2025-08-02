@@ -24,6 +24,9 @@ typedef struct Card {
   int attack;
   CardType type;
   Hitbox hitbox;
+
+  unsigned int cardVAO;
+  unsigned int cardProgram;
 } Card;
 
 typedef struct {

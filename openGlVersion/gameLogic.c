@@ -1,11 +1,76 @@
 #include "gameLogic.h"
 
-void removeCard(Card *hand, int handSize, int index){
-	for(int i = index; i < handSize - 1; i++){
-		hand[index] = hand[index + 1];
+void removeCard(Player *player, int index){
+	for(int i = index; i < player->handSize - 1; i++){
+		player->hand[index] = player->hand[index + 1];
 	}
-	memset(&hand[handSize - 1], 0, sizeof(Card));
+	memset(&player->hand[player->handSize - 1], 0, sizeof(Card));
+    player->handSize--;
 }
+
+
+void addCard(Player *player, Card cardToAdd){
+    if(player->handSize >= MAXHANDSIZE){
+        printf("Tried to add card to deck that is full. Card didn't get added\n");
+        return;
+    }
+    player->hand[player->handSize++] = cardToAdd;
+}
+
+
+Card initCard(int manaCost, const char *name, const char *artPath, int rarity, const char *effectText, int health, int attack, CardType type, Hitbox hitbox){
+    Card card;
+
+    card.manaCost = manaCost;
+    card.rarity = rarity;
+    card.health = health;
+    card.attack = attack;
+    card.type = type;
+    card.hitbox = hitbox;
+
+    card.name = malloc(sizeof(char) * MAXSTRLEN);
+    sprintf(card.name, "%s", name);
+    card.artPath = malloc(sizeof(char) * MAXSTRLEN);
+    sprintf(card.artPath, "%s", artPath);
+    card.effectText = malloc(sizeof(char) * MAXSTRLEN);
+    sprintf(card.effectText, "%s", effectText);
+
+
+    return card;
+}
+
+
+Player initPlayer(){
+    Player player;
+
+    player.hand = malloc(sizeof(Card) * MAXHANDSIZE);
+    player.deck = malloc(sizeof(Card) * MAXDECKSIZE);
+    player.board = malloc(sizeof(Card) * MAXUNITSIZE);
+    player.handSize = 0;
+    player.unitSize = 0;
+
+    return player;
+}
+
+
+GameState initGameState(){
+    GameState gameState;
+    gameState.players[PLAYER0] = initPlayer();
+    gameState.players[PLAYER1] = initPlayer();
+
+    Hitbox hitbox = {
+        .minX = 150,
+        .maxX = 250,
+        .minY = 315,
+        .maxY = 465
+    };
+
+    Card card = initCard(0, "orca", "", 0, "", 0, 0, 0, hitbox);
+    addCard(&gameState.players[PLAYER0], card);
+
+    return gameState;
+}
+
 
 int updateGameState(GameState* gameState, ProcessedInput* userIntent){
 	InputTarget input = userIntent->target;
@@ -19,8 +84,8 @@ int updateGameState(GameState* gameState, ProcessedInput* userIntent){
 				if(input.playerId != gameState->turn)
 					break;
 
-				Card playedCard = gameState->players[gameState->turn].hand[input.index];
-				removeCard(&(gameState->players[gameState->turn].hand), MAXHANDSIZE, input.index);
+				//Card playedCard = gameState->players[gameState->turn].hand[input.index];
+				removeCard(&(gameState->players[gameState->turn]), input.index);
 				//Send Play card event to event pipeline
 				//Add related unit to field
 
@@ -28,4 +93,5 @@ int updateGameState(GameState* gameState, ProcessedInput* userIntent){
 			}
 			break;
 	}
+    return 0;
 }

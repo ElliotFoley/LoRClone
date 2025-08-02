@@ -1,6 +1,6 @@
 #include "handleInput.h"
 
-ProcessedInput processInput(GameState *gameState, double xpos, double ypos, int isClick){
+ProcessedInput processPlayerInput(GameState *gameState, double xpos, double ypos, int isClick){
     Card *player0Deck = gameState->players[PLAYER0].deck;
     Card *player1Deck = gameState->players[PLAYER1].deck;
     ProcessedInput processedInput;

@@ -13,7 +13,7 @@ endif
 # Compiler and flags
 CC = gcc
 CFLAGS = -Wall
-SOURCES = main.c glad.c
+SOURCES = main.c glad.c gameLogic.c handleInput.c
 TARGET = main
 
 # Build rule

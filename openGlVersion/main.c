@@ -159,12 +159,18 @@ unsigned int setupCard(unsigned int cardProgram){
 }
 
 
-void drawCard(unsigned int cardProgram, unsigned int cardVAO, float x, float y){
+void initCardRender(Card *card, unsigned int cardProgram, unsigned int cardVAO){
+    card->cardProgram = cardProgram;
+    card->cardVAO = cardVAO;
+}
+
+
+void drawCard(unsigned int cardProgram, unsigned int cardVAO, float xpos, float ypos, float xscale, float yscale){
     mat4 model;
-    vec3 translate = {x, y, 0.0f};
+    vec3 translate = {xpos, ypos, 0.0f};
     glm_mat4_identity(model);
     glm_translate(model, translate);
-    glm_scale(model, (vec3){200.0f, 300.0f, 1.0f});
+    glm_scale(model, (vec3){xscale, yscale, 1.0f});
 
     glUniformMatrix4fv(glGetUniformLocation(cardProgram, "model"), 1, GL_FALSE, (float *)model);
 
@@ -173,8 +179,27 @@ void drawCard(unsigned int cardProgram, unsigned int cardVAO, float x, float y){
 }
 
 
-void drawGameState(){
-
+void drawGameState(GameState *gameState){
+    //Player0 hand being rendered
+    for(int i = 0; i < gameState->players[PLAYER0].handSize; i++){
+        unsigned int cardProgram = gameState->players[PLAYER0].hand[i].cardProgram;
+        unsigned int cardVAO = gameState->players[PLAYER0].hand[i].cardVAO;
+        float xpos = (gameState->players[PLAYER0].hand[i].hitbox.maxX + gameState->players[PLAYER0].hand[i].hitbox.minX) / 2.0f;
+        float ypos = (gameState->players[PLAYER0].hand[i].hitbox.maxY + gameState->players[PLAYER0].hand[i].hitbox.minY) / 2.0f;
+        float xscale = (gameState->players[PLAYER0].hand[i].hitbox.maxX - gameState->players[PLAYER0].hand[i].hitbox.minX);
+        float yscale = (gameState->players[PLAYER0].hand[i].hitbox.maxY - gameState->players[PLAYER0].hand[i].hitbox.minY);
+        drawCard(cardProgram, cardVAO, xpos, ypos, xscale, yscale);
+    }
+    //Player1 hand being rendered
+    for(int i = 0; i < gameState->players[PLAYER1].handSize; i++){
+        unsigned int cardProgram = gameState->players[PLAYER1].hand[i].cardProgram;
+        unsigned int cardVAO = gameState->players[PLAYER1].hand[i].cardVAO;
+        float xpos = (gameState->players[PLAYER1].hand[i].hitbox.maxX + gameState->players[PLAYER1].hand[i].hitbox.minX) / 2.0f;
+        float ypos = (gameState->players[PLAYER1].hand[i].hitbox.maxY + gameState->players[PLAYER1].hand[i].hitbox.minY) / 2.0f;
+        float xscale = (gameState->players[PLAYER1].hand[i].hitbox.maxX - gameState->players[PLAYER1].hand[i].hitbox.minX);
+        float yscale = (gameState->players[PLAYER1].hand[i].hitbox.maxY - gameState->players[PLAYER1].hand[i].hitbox.minY);
+        drawCard(cardProgram, cardVAO, xpos, ypos, xscale, yscale);
+    }
 }
 
 
@@ -246,6 +271,10 @@ int main(){
 
     double xpos, ypos;
 
+    GameState gameState = initGameState();
+    //This is not great I want to change this, but it works for now
+    initCardRender(&gameState.players[PLAYER0].hand[0], cardProgram, cardVAO);
+
     while(!glfwWindowShouldClose(window)){
         //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -260,9 +289,7 @@ int main(){
 
         glUseProgram(cardProgram);
         glBindTexture(GL_TEXTURE_2D, cardTexture);
-        drawCard(cardProgram, cardVAO, 200.0f, 240.0f);
-        drawCard(cardProgram, cardVAO, 400.0f, 240.0f);
-        drawCard(cardProgram, cardVAO, 600.0f, 240.0f);
+        drawGameState(&gameState);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

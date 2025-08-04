@@ -133,6 +133,47 @@ unsigned int linkShaders(const char *vertexFileName, const char *fragmentFileNam
 }
 
 
+void layoutCard(Card *card, int index, int playerId, int handSize){
+    int middle = handSize / 2;
+    float maxAngle = 90.0f;
+    //index = index + 1;  //0 indexing and all
+
+    float spacing = 110.0f;
+    float width = 100.0f;
+    float height = 150.0f;
+    float x = WIDTH / 2 + (index - middle) * spacing;
+
+    float y = 1000 ? 180 : (playerId == PLAYER0);
+
+    int distFromCenter = index - middle;
+    float ratio = ((float)distFromCenter / (float)middle);
+    float angle = -ratio * maxAngle;    //for some reason GLM rotations are oppsite of their sign. don't ask me why
+
+    if(!card->isDragging){
+        card->xpos = x;
+        card->ypos = y;
+    }
+
+    card->width = width;
+    card->height = height;
+    card->rotation = angle;
+
+    float arcHeight = 30.0f;
+    card->ypos += -fabsf((float)distFromCenter) / middle * arcHeight;
+
+}
+
+
+void layoutHands(GameState *gameState){
+    for(int player = 0; player < 2; player++){
+        Player *p = &gameState->players[player];
+        for(int i = 0; i < p->handSize; i++){
+            layoutCard(&p->hand[i], i, player, p->handSize);
+        }
+    }
+}
+
+
 unsigned int setupCard(unsigned int cardProgram){
     float cardVertices[] = {
         0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
@@ -165,11 +206,19 @@ void initCardRender(Card *card, unsigned int cardProgram, unsigned int cardVAO){
 }
 
 
-void drawCard(unsigned int cardProgram, unsigned int cardVAO, float xpos, float ypos, float xscale, float yscale){
+void initHandRender(Player *player, unsigned int cardProgram, unsigned int cardVAO){
+    for(int i = 0; i < player->handSize; i++){
+        initCardRender(&player->hand[i], cardProgram, cardVAO);
+    }
+}
+
+
+void drawCard(unsigned int cardProgram, unsigned int cardVAO, float xpos, float ypos, float xscale, float yscale, float rotation){
     mat4 model;
     vec3 translate = {xpos, ypos, 0.0f};
     glm_mat4_identity(model);
     glm_translate(model, translate);
+    glm_rotate_z(model, glm_rad(rotation), model);
     glm_scale(model, (vec3){xscale, yscale, 1.0f});
 
     glUniformMatrix4fv(glGetUniformLocation(cardProgram, "model"), 1, GL_FALSE, (float *)model);
@@ -180,25 +229,14 @@ void drawCard(unsigned int cardProgram, unsigned int cardVAO, float xpos, float 
 
 
 void drawGameState(GameState *gameState){
-    //Player0 hand being rendered
-    for(int i = 0; i < gameState->players[PLAYER0].handSize; i++){
-        unsigned int cardProgram = gameState->players[PLAYER0].hand[i].cardProgram;
-        unsigned int cardVAO = gameState->players[PLAYER0].hand[i].cardVAO;
-        float xpos = (gameState->players[PLAYER0].hand[i].hitbox.maxX + gameState->players[PLAYER0].hand[i].hitbox.minX) / 2.0f;
-        float ypos = (gameState->players[PLAYER0].hand[i].hitbox.maxY + gameState->players[PLAYER0].hand[i].hitbox.minY) / 2.0f;
-        float xscale = (gameState->players[PLAYER0].hand[i].hitbox.maxX - gameState->players[PLAYER0].hand[i].hitbox.minX);
-        float yscale = (gameState->players[PLAYER0].hand[i].hitbox.maxY - gameState->players[PLAYER0].hand[i].hitbox.minY);
-        drawCard(cardProgram, cardVAO, xpos, ypos, xscale, yscale);
-    }
-    //Player1 hand being rendered
-    for(int i = 0; i < gameState->players[PLAYER1].handSize; i++){
-        unsigned int cardProgram = gameState->players[PLAYER1].hand[i].cardProgram;
-        unsigned int cardVAO = gameState->players[PLAYER1].hand[i].cardVAO;
-        float xpos = (gameState->players[PLAYER1].hand[i].hitbox.maxX + gameState->players[PLAYER1].hand[i].hitbox.minX) / 2.0f;
-        float ypos = (gameState->players[PLAYER1].hand[i].hitbox.maxY + gameState->players[PLAYER1].hand[i].hitbox.minY) / 2.0f;
-        float xscale = (gameState->players[PLAYER1].hand[i].hitbox.maxX - gameState->players[PLAYER1].hand[i].hitbox.minX);
-        float yscale = (gameState->players[PLAYER1].hand[i].hitbox.maxY - gameState->players[PLAYER1].hand[i].hitbox.minY);
-        drawCard(cardProgram, cardVAO, xpos, ypos, xscale, yscale);
+    for(int player = 0; player < 2; player++){
+        Player *p = &gameState->players[player];
+        for(int i = 0; i < p->handSize; i++){
+            Card *card = &p->hand[i];
+            unsigned int cardProgram = card->cardProgram;
+            unsigned int cardVAO = card->cardVAO;
+            drawCard(cardProgram, cardVAO, card->xpos, card->ypos, card->width, card->height, card->rotation);
+        }
     }
 }
 
@@ -272,8 +310,9 @@ int main(){
     double xpos, ypos;
 
     GameState gameState = initGameState();
+    layoutHands(&gameState);
     //This is not great I want to change this, but it works for now
-    initCardRender(&gameState.players[PLAYER0].hand[0], cardProgram, cardVAO);
+    initHandRender(&gameState.players[PLAYER0], cardProgram, cardVAO);
 
     while(!glfwWindowShouldClose(window)){
         //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);

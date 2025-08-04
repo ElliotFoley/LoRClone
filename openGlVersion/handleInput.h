@@ -23,7 +23,13 @@ typedef struct Card {
   int health;
   int attack;
   CardType type;
-  Hitbox hitbox;
+
+  int isDragging;
+  float xpos;
+  float ypos;
+  float width;
+  float height;
+  float rotation;
 
   unsigned int cardVAO;
   unsigned int cardProgram;

@@ -18,7 +18,7 @@ void addCard(Player *player, Card cardToAdd){
 }
 
 
-Card initCard(int manaCost, const char *name, const char *artPath, int rarity, const char *effectText, int health, int attack, CardType type, Hitbox hitbox){
+Card initCard(int manaCost, const char *name, const char *artPath, int rarity, const char *effectText, int health, int attack, CardType type){
     Card card;
 
     card.manaCost = manaCost;
@@ -26,7 +26,7 @@ Card initCard(int manaCost, const char *name, const char *artPath, int rarity, c
     card.health = health;
     card.attack = attack;
     card.type = type;
-    card.hitbox = hitbox;
+    card.isDragging = 0;
 
     card.name = malloc(sizeof(char) * MAXSTRLEN);
     sprintf(card.name, "%s", name);
@@ -58,14 +58,11 @@ GameState initGameState(){
     gameState.players[PLAYER0] = initPlayer();
     gameState.players[PLAYER1] = initPlayer();
 
-    Hitbox hitbox = {
-        .minX = 150,
-        .maxX = 250,
-        .minY = 315,
-        .maxY = 465
-    };
-
-    Card card = initCard(0, "orca", "", 0, "", 0, 0, 0, hitbox);
+    Card card = initCard(0, "orca", "", 0, "", 0, 0, 0);
+    addCard(&gameState.players[PLAYER0], card);
+    addCard(&gameState.players[PLAYER0], card);
+    addCard(&gameState.players[PLAYER0], card);
+    addCard(&gameState.players[PLAYER0], card);
     addCard(&gameState.players[PLAYER0], card);
 
     return gameState;

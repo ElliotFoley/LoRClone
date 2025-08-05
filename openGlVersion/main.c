@@ -134,34 +134,29 @@ unsigned int linkShaders(const char *vertexFileName, const char *fragmentFileNam
 
 
 void layoutCard(Card *card, int index, int playerId, int handSize){
-    int middle = handSize / 2;
-    float maxAngle = 90.0f;
-    //index = index + 1;  //0 indexing and all
+    float handCenterX = WIDTH / 2.0f;
+    float handCenterY = (playerId == PLAYER0) ? 180.0f : 900.0f;
 
-    float spacing = 75.0f;
-    float width = 100.0f;
-    float height = 150.0f;
-    float x = WIDTH / 2 + (index - middle) * spacing;
+    float radius = 500.0f;
+    float maxAngleDeg = 30.0f;
+    float middle = (float)(handSize) / 2.0f;
 
-    float y = 1000 ? 180 : (playerId == PLAYER0);
 
-    int distFromCenter = index - middle;
-    float ratio = ((float)distFromCenter / (float)middle);
-    float angle = -ratio * maxAngle;    //for some reason GLM rotations are oppsite of their sign. don't ask me why
+    float angleDeg = ((index - middle) / middle) * (maxAngleDeg / 2.0f);
+    float angleRad = glm_rad(angleDeg);
 
-    if(!card->isDragging){
-        card->xpos = x;
-        card->ypos = y;
+
+    float xpos = handCenterX + sinf(angleRad) * radius;
+    float ypos = handCenterY - (1 - cosf(angleRad)) * radius;
+
+    if (!card->isDragging) {
+        card->xpos = xpos;
+        card->ypos = ypos;
     }
 
-    card->width = width;
-    card->height = height;
-    card->rotation = angle;
-
-    float radius = 40.0f;
-    float angleRad = glm_rad(card->rotation);
-    float yOffset = -radius * sinf(angleRad);
-    card->ypos += yOffset;
+    card->width = 100.0f;
+    card->height = 150.0f;
+    card->rotation = -angleDeg;
 }
 
 
@@ -236,7 +231,7 @@ void drawGameState(GameState *gameState){
             Card *card = &p->hand[i];
             unsigned int cardProgram = card->cardProgram;
             unsigned int cardVAO = card->cardVAO;
-            drawCard(cardProgram, cardVAO, card->xpos, card->ypos, card->width, card->height, card->rotation);
+            drawCard(cardProgram, cardVAO, card->xpos, card->ypos, card->width, card->height, card->rotation + 180.0f * player);
         }
     }
 }
@@ -314,6 +309,7 @@ int main(){
     layoutHands(&gameState);
     //This is not great I want to change this, but it works for now
     initHandRender(&gameState.players[PLAYER0], cardProgram, cardVAO);
+    initHandRender(&gameState.players[PLAYER1], cardProgram, cardVAO);
 
     while(!glfwWindowShouldClose(window)){
         //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);

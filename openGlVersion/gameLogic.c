@@ -63,7 +63,7 @@ GameState initGameState(){
     addCard(&gameState.players[PLAYER0], card);
     addCard(&gameState.players[PLAYER0], card);
     addCard(&gameState.players[PLAYER0], card);
-    addCard(&gameState.players[PLAYER0], card);
+    //addCard(&gameState.players[PLAYER0], card);
 
     return gameState;
 }

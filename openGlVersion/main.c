@@ -138,7 +138,7 @@ void layoutCard(Card *card, int index, int playerId, int handSize){
     float maxAngle = 90.0f;
     //index = index + 1;  //0 indexing and all
 
-    float spacing = 110.0f;
+    float spacing = 75.0f;
     float width = 100.0f;
     float height = 150.0f;
     float x = WIDTH / 2 + (index - middle) * spacing;
@@ -158,9 +158,10 @@ void layoutCard(Card *card, int index, int playerId, int handSize){
     card->height = height;
     card->rotation = angle;
 
-    float arcHeight = 30.0f;
-    card->ypos += -fabsf((float)distFromCenter) / middle * arcHeight;
-
+    float radius = 40.0f;
+    float angleRad = glm_rad(card->rotation);
+    float yOffset = -radius * sinf(angleRad);
+    card->ypos += yOffset;
 }
 
 

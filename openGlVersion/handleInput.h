@@ -1,7 +1,9 @@
 #ifndef HANDLEINPUT_H
 #define HANDLEINPUT_H
+#include "cglm/cglm.h"
 #include "define.h"
 #include <stdbool.h>
+#include <stdio.h>
 
 typedef enum { TARGET_NONE, TARGET_CARD, TARGET_UNIT, TARGET_SPELL } TargetType;
 
@@ -16,14 +18,15 @@ typedef enum { CARDTYPE_UNIT, CARDTYPE_SPELL } CardType;
 
 typedef struct Card {
   int manaCost;
-  char *name;
-  char *artPath;
+  char name[MAXSTRLEN];
+  char artPath[MAXSTRLEN];
   int rarity;
-  char *effectText;
+  char effectText[MAXSTRLEN];
   int health;
   int attack;
   CardType type;
 
+  int isHovering;
   int isDragging;
   float xpos;
   float ypos;
@@ -80,6 +83,7 @@ typedef struct {
 
 } renderDeck;
 
-// handleInput
+ProcessedInput processPlayerInput(GameState *gameState, double xpos,
+                                  double ypos, int isClick);
 
 #endif

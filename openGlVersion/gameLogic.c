@@ -9,12 +9,21 @@ void removeCard(Player *player, int index){
 }
 
 
+Card cloneCard(Card src) {
+    Card dest = src;
+    strcpy(dest.name, src.name);
+    strcpy(dest.artPath, src.artPath);
+    strcpy(dest.effectText, src.effectText);
+    return dest;
+}
+
+
 void addCard(Player *player, Card cardToAdd){
     if(player->handSize >= MAXHANDSIZE){
         printf("Tried to add card to deck that is full. Card didn't get added\n");
         return;
     }
-    player->hand[player->handSize++] = cardToAdd;
+    player->hand[player->handSize++] = cloneCard(cardToAdd);
 }
 
 
@@ -27,14 +36,11 @@ Card initCard(int manaCost, const char *name, const char *artPath, int rarity, c
     card.attack = attack;
     card.type = type;
     card.isDragging = 0;
+    card.isHovering = 0;
 
-    card.name = malloc(sizeof(char) * MAXSTRLEN);
     sprintf(card.name, "%s", name);
-    card.artPath = malloc(sizeof(char) * MAXSTRLEN);
     sprintf(card.artPath, "%s", artPath);
-    card.effectText = malloc(sizeof(char) * MAXSTRLEN);
     sprintf(card.effectText, "%s", effectText);
-
 
     return card;
 }
@@ -58,20 +64,17 @@ GameState initGameState(){
     gameState.players[PLAYER0] = initPlayer();
     gameState.players[PLAYER1] = initPlayer();
 
-    Card card = initCard(0, "orca", "", 0, "", 0, 0, 0);
-    addCard(&gameState.players[PLAYER0], card);
-    addCard(&gameState.players[PLAYER0], card);
-    addCard(&gameState.players[PLAYER0], card);
-    addCard(&gameState.players[PLAYER0], card);
-    addCard(&gameState.players[PLAYER0], card);
-    addCard(&gameState.players[PLAYER0], card);
+    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, 0));
+    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, 0));
+    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, 0));
+    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, 0));
+    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, 0));
 
-    addCard(&gameState.players[PLAYER1], card);
-    addCard(&gameState.players[PLAYER1], card);
-    addCard(&gameState.players[PLAYER1], card);
-    addCard(&gameState.players[PLAYER1], card);
-    addCard(&gameState.players[PLAYER1], card);
-    addCard(&gameState.players[PLAYER1], card);
+    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, 0));
+    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, 0));
+    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, 0));
+    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, 0));
+    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, 0));
 
     return gameState;
 }

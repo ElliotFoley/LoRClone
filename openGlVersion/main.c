@@ -150,13 +150,19 @@ void layoutCard(Card *card, int index, int playerId, int handSize){
     float xpos = handCenterX + (sinf(angleRad) * radius) * playerYMod;
     float ypos = handCenterY - (((1 - cosf(angleRad)) * radius)) * playerYMod;
 
-    if (!card->isDragging) {
+    if(!card->isDragging) {
         card->xpos = xpos;
         card->ypos = ypos;
     }
 
     card->width = 100.0f;
     card->height = 150.0f;
+
+    if(card->isHovering){
+        card->width *= 2;
+        card->height *= 2;
+    }
+
     card->rotation = -angleDeg;
     card->rotation += 180.0f * playerId;
 }
@@ -319,6 +325,8 @@ int main(){
 
         processInput(window, 0);
         glfwGetCursorPos(window, &xpos, &ypos);
+        processPlayerInput(&gameState, xpos, ypos, 0);
+        layoutHands(&gameState);
 
         glUseProgram(backGroundProgram);
         glBindTexture(GL_TEXTURE_2D, backGroundTexture);

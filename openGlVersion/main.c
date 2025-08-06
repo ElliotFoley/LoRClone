@@ -135,7 +135,8 @@ unsigned int linkShaders(const char *vertexFileName, const char *fragmentFileNam
 
 void layoutCard(Card *card, int index, int playerId, int handSize){
     float handCenterX = WIDTH / 2.0f;
-    float handCenterY = (playerId == PLAYER0) ? 180.0f : 900.0f;
+    float handCenterY = (playerId == PLAYER0) ? 180.0f : 1000.0f;
+    int playerYMod = (playerId == PLAYER0) ? 1 : -1;
 
     float radius = 500.0f;
     float maxAngleDeg = 30.0f;
@@ -146,8 +147,8 @@ void layoutCard(Card *card, int index, int playerId, int handSize){
     float angleRad = glm_rad(angleDeg);
 
 
-    float xpos = handCenterX + sinf(angleRad) * radius;
-    float ypos = handCenterY - (1 - cosf(angleRad)) * radius;
+    float xpos = handCenterX + (sinf(angleRad) * radius) * playerYMod;
+    float ypos = handCenterY - (((1 - cosf(angleRad)) * radius)) * playerYMod;
 
     if (!card->isDragging) {
         card->xpos = xpos;
@@ -157,6 +158,7 @@ void layoutCard(Card *card, int index, int playerId, int handSize){
     card->width = 100.0f;
     card->height = 150.0f;
     card->rotation = -angleDeg;
+    card->rotation += 180.0f * playerId;
 }
 
 
@@ -231,7 +233,7 @@ void drawGameState(GameState *gameState){
             Card *card = &p->hand[i];
             unsigned int cardProgram = card->cardProgram;
             unsigned int cardVAO = card->cardVAO;
-            drawCard(cardProgram, cardVAO, card->xpos, card->ypos, card->width, card->height, card->rotation + 180.0f * player);
+            drawCard(cardProgram, cardVAO, card->xpos, card->ypos, card->width, card->height, card->rotation);
         }
     }
 }

@@ -138,7 +138,7 @@ void layoutCard(Card *card, int index, int playerId, int handSize){
     float handCenterY = (playerId == PLAYER0) ? 180.0f : 1000.0f;
     int playerYMod = (playerId == PLAYER0) ? 1 : -1;
 
-    float radius = 500.0f;
+    float radius = 1000.0f;
     float maxAngleDeg = 30.0f;
     float middle = (float)(handSize) / 2.0f;
 
@@ -325,7 +325,7 @@ int main(){
 
         processInput(window, 0);
         glfwGetCursorPos(window, &xpos, &ypos);
-        processPlayerInput(&gameState, xpos, ypos, 0);
+        processPlayerInput(&gameState, xpos, HEIGHT - ypos, dataWrapper.isClick);
         layoutHands(&gameState);
 
         glUseProgram(backGroundProgram);

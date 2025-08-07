@@ -1,0 +1,12 @@
+{
+    "AudioAmplifier":{
+        "name": "Audio Amplifer",
+        "manaCost": 2,
+        "artPath": "",
+        "rarity", 0,
+        "effectText": "Play: For the rest of the game, your maximum mana and hand size are increased to 11!",
+        "health": 1,
+        "attack": 4,
+        "CardType": "Unit"
+    }
+}

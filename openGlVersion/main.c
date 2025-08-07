@@ -331,9 +331,20 @@ int main(){
 
         processInput(window, 0);
         glfwGetCursorPos(window, &xpos, &ypos);
-        dataWrapper.mouseX = xpos;
-        dataWrapper.mouseY = HEIGHT - ypos;
-        processPlayerInput(&gameState, xpos, HEIGHT - ypos, dataWrapper.isClick);
+
+        int winWidth, winHeight;
+        glfwGetWindowSize(window, &winWidth, &winHeight);
+
+        // Adjust for DPI scaling
+        dataWrapper.mouseX = xpos * (double)WIDTH / winWidth;
+        dataWrapper.mouseY = ypos * (double)HEIGHT / winHeight;
+
+        // Flip Y if needed
+        dataWrapper.mouseY = HEIGHT - dataWrapper.mouseY;
+
+        //dataWrapper.mouseX = xpos;
+        //dataWrapper.mouseY = HEIGHT - ypos;
+        processPlayerInput(&gameState, dataWrapper.mouseX, dataWrapper.mouseY, dataWrapper.isClick);
         layoutHands(window, &gameState);
 
         glUseProgram(backGroundProgram);

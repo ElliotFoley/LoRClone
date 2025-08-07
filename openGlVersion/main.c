@@ -133,10 +133,10 @@ unsigned int linkShaders(const char *vertexFileName, const char *fragmentFileNam
 }
 
 
-void layoutCard(Card *card, int index, int playerId, int handSize){
+void layoutCard(GLFWwindow *window, Card *card, int index, int playerId, int handSize){
     float handCenterX = WIDTH / 2.0f;
     float handCenterY = (playerId == PLAYER0) ? 180.0f : 1000.0f;
-    int playerYMod = (playerId == PLAYER0) ? 1 : -1;
+    int playerSign = (playerId == PLAYER0) ? 1 : -1;
 
     float radius = 1000.0f;
     float maxAngleDeg = 30.0f;
@@ -147,13 +147,8 @@ void layoutCard(Card *card, int index, int playerId, int handSize){
     float angleRad = glm_rad(angleDeg);
 
 
-    float xpos = handCenterX + (sinf(angleRad) * radius) * playerYMod;
-    float ypos = handCenterY - (((1 - cosf(angleRad)) * radius)) * playerYMod;
-
-    if(!card->isDragging) {
-        card->xpos = xpos;
-        card->ypos = ypos;
-    }
+    float xpos = handCenterX + (sinf(angleRad) * radius) * playerSign;
+    float ypos = handCenterY - (((1 - cosf(angleRad)) * radius)) * playerSign;
 
     card->width = 100.0f;
     card->height = 150.0f;
@@ -163,16 +158,27 @@ void layoutCard(Card *card, int index, int playerId, int handSize){
         card->height *= 2;
     }
 
+    if(!card->isDragging) {
+        card->xpos = xpos;
+        card->ypos = ypos;
+    }
+    else{
+        DataWrapper *dataWrapper = glfwGetWindowUserPointer(window);
+        card->xpos = dataWrapper->mouseX - card->width / 2 * playerSign;
+        card->ypos = dataWrapper->mouseY - card->height / 2 * playerSign;
+    }
+
+
     card->rotation = -angleDeg;
     card->rotation += 180.0f * playerId;
 }
 
 
-void layoutHands(GameState *gameState){
+void layoutHands(GLFWwindow *window, GameState *gameState){
     for(int player = 0; player < 2; player++){
         Player *p = &gameState->players[player];
         for(int i = 0; i < p->handSize; i++){
-            layoutCard(&p->hand[i], i, player, p->handSize);
+            layoutCard(window, &p->hand[i], i, player, p->handSize);
         }
     }
 }
@@ -314,7 +320,7 @@ int main(){
     double xpos, ypos;
 
     GameState gameState = initGameState();
-    layoutHands(&gameState);
+    layoutHands(window, &gameState);
     //This is not great I want to change this, but it works for now
     initHandRender(&gameState.players[PLAYER0], cardProgram, cardVAO);
     initHandRender(&gameState.players[PLAYER1], cardProgram, cardVAO);
@@ -325,8 +331,10 @@ int main(){
 
         processInput(window, 0);
         glfwGetCursorPos(window, &xpos, &ypos);
+        dataWrapper.mouseX = xpos;
+        dataWrapper.mouseY = HEIGHT - ypos;
         processPlayerInput(&gameState, xpos, HEIGHT - ypos, dataWrapper.isClick);
-        layoutHands(&gameState);
+        layoutHands(window, &gameState);
 
         glUseProgram(backGroundProgram);
         glBindTexture(GL_TEXTURE_2D, backGroundTexture);

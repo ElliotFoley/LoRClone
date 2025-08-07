@@ -1,9 +1,10 @@
 #include "handleInput.h"
 
 
-int isMouseOverRotatedCard(Card *card, float px, float py) {
-    float centerX = card->xpos + card->width / 2.0f;
-    float centerY = card->ypos + card->height / 2.0f;
+int isMouseOverRotatedCard(int playerId, Card *card, float px, float py) {
+    int playerSign = (playerId) ? -1 : 1;
+    float centerX = card->xpos + card->width / 2.0f * playerSign;
+    float centerY = card->ypos + card->height / 2.0f * playerSign;
 
     float dx = px - centerX;
     float dy = py - centerY;
@@ -45,9 +46,12 @@ ProcessedInput processPlayerInput(GameState *gameState, double xpos, double ypos
     for(int player = 0; player < 2; player++){
         Card *playerHand = gameState->players[player].hand;
         for(int i = 0; i < gameState->players[player].handSize; i++){
-            if(isMouseOverRotatedCard(&playerHand[i], xpos, ypos)){
+            if(isMouseOverRotatedCard(player, &playerHand[i], xpos, ypos)){
                 if(isClick){
                     playerHand[i].isDragging = 1;
+                }
+                else{
+                    playerHand[i].isDragging = 0;
                 }
                 playerHand[i].isHovering = 1;
                 processedInput.target.playerId = PLAYER0;
@@ -55,6 +59,7 @@ ProcessedInput processPlayerInput(GameState *gameState, double xpos, double ypos
                 processedInput.target.type = TARGET_CARD;
             }
             else{
+                playerHand[i].isDragging = 0;
                 playerHand[i].isHovering = 0;
             }
 

@@ -8,6 +8,8 @@
 
 typedef struct {
   int isClick;
+  float mouseX;
+  float mouseY;
 } DataWrapper;
 
 #endif

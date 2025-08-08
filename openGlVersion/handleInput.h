@@ -52,10 +52,10 @@ typedef struct {
 } ProcessedInput;
 
 typedef struct {
-  char *name;
-  char *artPath;
+  char name[MAXSTRLEN];
+  char artPath[MAXSTRLEN];
   int rarity;
-  char *effectText;
+  char effectText[MAXSTRLEN];
   int health;
   int attack;
   Hitbox hitbox;
@@ -66,6 +66,10 @@ typedef struct Player {
   Unit *board;
   Unit *attackingBoard;
   Card *deck;
+
+  int maxMana;
+  int currentMana;
+
   int handSize;
   int unitSize;
 } Player;

@@ -9,6 +9,7 @@ void processInput(GLFWwindow *window, float deltaTime){
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
     }
+    //if()
     if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS){
         dataWrapper->isClick = 1;
     }
@@ -334,14 +335,9 @@ int main(){
 
         int winWidth, winHeight;
         glfwGetWindowSize(window, &winWidth, &winHeight);
-
-        // Adjust for DPI scaling
         dataWrapper.mouseX = xpos * (double)WIDTH / winWidth;
         dataWrapper.mouseY = ypos * (double)HEIGHT / winHeight;
-
-        // Flip Y if needed
         dataWrapper.mouseY = HEIGHT - dataWrapper.mouseY;
-
         //dataWrapper.mouseX = xpos;
         //dataWrapper.mouseY = HEIGHT - ypos;
         processPlayerInput(&gameState, dataWrapper.mouseX, dataWrapper.mouseY, dataWrapper.isClick);

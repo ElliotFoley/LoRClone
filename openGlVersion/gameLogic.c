@@ -9,21 +9,61 @@ void removeCard(Player *player, int index){
 }
 
 
-Card cloneCard(Card src) {
-    Card dest = src;
-    strcpy(dest.name, src.name);
-    strcpy(dest.artPath, src.artPath);
-    strcpy(dest.effectText, src.effectText);
-    return dest;
+Unit initUnit(char *name, char *artPath, int rarity, char *effectText, int health, int attack){
+    Unit unit;
+
+    unit.rarity = rarity;
+    unit.health = health;
+    unit.attack = attack;
+
+    sprintf(unit.name, "%s", name);
+    sprintf(unit.artPath, "%s", artPath);
+    sprintf(unit.effectText, "%s", effectText);
+
+    return unit;
 }
 
 
-void addCard(Player *player, Card cardToAdd){
-    if(player->handSize >= MAXHANDSIZE){
-        printf("Tried to add card to deck that is full. Card didn't get added\n");
+Unit cardToUnit(Card card){
+    Unit newUnit = initUnit(card.name, card.artPath, card.rarity, card.effectText, card.health, card.attack);
+    return newUnit;
+}
+
+void addUnitAtIndex(Player *player, Unit unitToAdd, int unitIndex){
+    if(player->unitSize >= MAXUNITSIZE){
+        printf("Tried to add unit to a board that is full. Card didn't get added\n");
         return;
     }
-    player->hand[player->handSize++] = cloneCard(cardToAdd);
+    for(int i = player->unitSize; i > unitIndex; i--){
+       player->board[i] = player->board[i - 1];
+    }
+    player->board[unitIndex] = unitToAdd;
+    player->unitSize++;
+}
+
+void playCard(GameState *gameState, int playerId, int cardIndex){
+    //Maybe do some checking if playable?
+    Player *player = &(gameState->players[playerId]);
+    Card playedCard = gameState->players[playerId].hand[cardIndex];
+    if(player->currentMana >= playedCard.manaCost){
+        //play the card
+        removeCard(player, cardIndex);
+        if(playedCard.type == CARDTYPE_UNIT){
+            //Activate play effect, then summon
+            //Here is where I would do a play effect thing
+            Unit summonedUnit = cardToUnit(playedCard);
+            addUnitAtIndex(player, summonedUnit, player->unitSize);
+            //Here is where I would do a summon effect
+        }
+    }
+}
+
+void addCard(Player *player, Card cardToAdd){
+    if(player->handSize >= MAXHANDSIZE){
+        printf("Tried to add card to hand that is full. Card didn't get added\n");
+        return;
+    }
+    player->hand[player->handSize++] = cardToAdd;
 }
 
 

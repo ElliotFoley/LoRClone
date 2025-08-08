@@ -9,7 +9,7 @@
 void eventListner(Card *card, Card *eventCard);
 
 void removeCard(Player *player, int index);
-void playCard(Card card);
+void playCard(GameState *gameState, int playerId, int cardIndex);
 void declareAttack(Unit *unitArray);
 void addCard(Player *player, Card cardToAdd);
 

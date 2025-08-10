@@ -84,6 +84,8 @@ ecs_entity_t initCardECS(ecs_world_t *world, ManaCost manaCost, Name name, ArtPa
     ecs_set(world, card, Size, {0, 0});
     ecs_set(world, card, Position, {0, 0});
     ecs_set(world, card, Rotation, {0});
+    //Adds the card tag
+    ecs_add(world, card, CardTag);
 
     return card;
 }

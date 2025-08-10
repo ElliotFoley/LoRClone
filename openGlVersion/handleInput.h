@@ -88,4 +88,6 @@ typedef struct {
 ProcessedInput processPlayerInput(GameState *gameState, double xpos,
                                   double ypos, int isClick);
 
+ProcessedInput processPlayerInputECS(ecs_world_t *world);
+
 #endif

@@ -351,6 +351,7 @@ int main(){
         dataWrapper.mouseY = HEIGHT - dataWrapper.mouseY;
         //dataWrapper.mouseX = xpos;
         //dataWrapper.mouseY = HEIGHT - ypos;
+        processPlayerInputECS(world);
         processPlayerInput(&gameState, dataWrapper.mouseX, dataWrapper.mouseY, dataWrapper.isClick);
         layoutHands(window, &gameState);
 

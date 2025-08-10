@@ -4,9 +4,9 @@
 #include "flecs/flecs.h"
 
 // components for cards for ECS
-struct ManaCost {
+typedef struct {
   int manaCost;
-};
+} ManaCost;
 typedef struct {
   int attack;
 } Attack;
@@ -22,12 +22,6 @@ typedef struct {
 typedef struct {
   int rarity;
 } Rarity;
-typedef struct {
-  int isHovering;
-} IsHovering;
-typedef struct {
-  int isDragging;
-} IsDragging;
 
 typedef struct {
   char name[MAXSTRLEN];
@@ -46,7 +40,7 @@ typedef struct {
   float width, height;
 } Size;
 typedef struct {
-  float rotation;
+  float angle;
 } Rotation;
 typedef struct {
   unsigned int vao;
@@ -55,14 +49,19 @@ typedef struct {
   unsigned int shaderProgram;
 } ShaderProgram;
 
+extern ECS_TAG_DECLARE(IsHovering);
+extern ECS_TAG_DECLARE(IsDragging);
+extern ECS_TAG_DECLARE(CardTag);
+extern ECS_TAG_DECLARE(UnitTag);
+extern ECS_TAG_DECLARE(PlayerTag);
+// extern ECS_TAG_DECLARE(BoardTile);
+
 extern ECS_COMPONENT_DECLARE(ManaCost);
 extern ECS_COMPONENT_DECLARE(Attack);
 extern ECS_COMPONENT_DECLARE(Health);
 extern ECS_COMPONENT_DECLARE(CardType);
 extern ECS_COMPONENT_DECLARE(Owner);
 extern ECS_COMPONENT_DECLARE(Rarity);
-extern ECS_COMPONENT_DECLARE(IsHovering);
-extern ECS_COMPONENT_DECLARE(IsDragging);
 extern ECS_COMPONENT_DECLARE(Name);
 extern ECS_COMPONENT_DECLARE(ArtPath);
 extern ECS_COMPONENT_DECLARE(EffectText);

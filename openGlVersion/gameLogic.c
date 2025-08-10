@@ -48,7 +48,8 @@ void playCard(GameState *gameState, int playerId, int cardIndex){
     if(player->currentMana >= playedCard.manaCost){
         //play the card
         removeCard(player, cardIndex);
-        if(playedCard.type == CARDTYPE_UNIT){
+        player->currentMana -= playedCard.manaCost;
+        if(playedCard.type.cardType == CARDTYPE_UNIT){
             //Activate play effect, then summon
             //Here is where I would do a play effect thing
             Unit summonedUnit = cardToUnit(playedCard);
@@ -66,6 +67,26 @@ void addCard(Player *player, Card cardToAdd){
     player->hand[player->handSize++] = cardToAdd;
 }
 
+
+ecs_entity_t initCardECS(ecs_world_t *world, ManaCost manaCost, Name name, ArtPath artPath, Rarity rarity, EffectText effectText, Health health, Attack attack, CardType cardType){
+    ecs_entity_t card = ecs_new(world);
+    //Do note that this copies the data over so these values can go out of scope
+    ecs_set_ptr(world, card, ManaCost, &manaCost);
+    ecs_set_ptr(world, card, Name, &name);
+    ecs_set_ptr(world, card, ArtPath, &artPath);
+    ecs_set_ptr(world, card, EffectText, &effectText);
+    ecs_set_ptr(world, card, Health, &health);
+    ecs_set_ptr(world, card, Attack, &attack);
+    ecs_set_ptr(world, card, CardType, &cardType);
+
+    ecs_set(world, card, VAO, {0});
+    ecs_set(world, card, ShaderProgram, {0});
+    ecs_set(world, card, Size, {0, 0});
+    ecs_set(world, card, Position, {0, 0});
+    ecs_set(world, card, Rotation, {0});
+
+    return card;
+}
 
 Card initCard(int manaCost, const char *name, const char *artPath, int rarity, const char *effectText, int health, int attack, CardType type){
     Card card;
@@ -104,17 +125,17 @@ GameState initGameState(){
     gameState.players[PLAYER0] = initPlayer();
     gameState.players[PLAYER1] = initPlayer();
 
-    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, 0));
-    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, 0));
-    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, 0));
-    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, 0));
-    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, 0));
+    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
+    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
+    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
+    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
+    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
 
-    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, 0));
-    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, 0));
-    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, 0));
-    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, 0));
-    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, 0));
+    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
+    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
+    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
+    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
+    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
 
     return gameState;
 }

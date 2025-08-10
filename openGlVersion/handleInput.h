@@ -1,7 +1,7 @@
 #ifndef HANDLEINPUT_H
 #define HANDLEINPUT_H
 #include "cglm/cglm.h"
-#include "define.h"
+#include "components.h"
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -13,8 +13,6 @@ typedef struct Hitbox {
   int maxX;
   int maxY;
 } Hitbox;
-
-typedef enum { CARDTYPE_UNIT, CARDTYPE_SPELL } CardType;
 
 typedef struct Card {
   int manaCost;

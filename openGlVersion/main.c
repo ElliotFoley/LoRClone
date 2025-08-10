@@ -252,7 +252,18 @@ void drawGameState(GameState *gameState){
 }
 
 
+ecs_world_t *initWorldECS(){
+    ecs_world_t *world = ecs_init();
+
+    // Import the module. This runs the AppComponentsImport function
+    // and registers everything correctly.
+    ECS_IMPORT(world, components);
+
+    return world;
+}
+
 int main(){
+    ecs_world_t *world = initWorldECS();
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);

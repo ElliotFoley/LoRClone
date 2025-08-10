@@ -2,7 +2,6 @@
 #define GAMELOGIC_H
 
 #include "handleInput.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 

@@ -4,18 +4,22 @@
 #include "stb_image.h"
 
 
-void processInput(GLFWwindow *window, float deltaTime){
-    DataWrapper *dataWrapper = glfwGetWindowUserPointer(window);
+void processInput(GLFWwindow *window, float deltaTime, ecs_world_t *world){
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
     }
-    //if()
-    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS){
-        dataWrapper->isClick = 1;
-    }
-    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE){
-        dataWrapper->isClick = 0;
-    }
+    double xpos, ypos;
+    MousePosition *pos = ecs_singleton_get_mut(world, MousePosition);
+
+    glfwGetCursorPos(window, &xpos, &ypos);
+    int winWidth, winHeight;
+    glfwGetWindowSize(window, &winWidth, &winHeight);
+    pos->x = xpos * (double)WIDTH / winWidth;
+    pos->y = ypos * (double)HEIGHT / winHeight;
+    pos->y = HEIGHT - pos->y;
+
+    MouseButtonState *mb = ecs_singleton_get_mut(world, MouseButtonState);
+    mb->leftDown = (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
 }
 
 
@@ -252,10 +256,18 @@ void drawGameState(GameState *gameState){
 }
 
 
+void initMouseECS(ecs_world_t *world){
+
+    ecs_singleton_set(world, MousePosition, {0, 0});
+    ecs_singleton_set(world, MouseButtonState, {0});
+
+}
+
+
 ecs_world_t *initWorldECS(){
     ecs_world_t *world = ecs_init();
 
-    // Import the module. This runs the AppComponentsImport function
+    // Import the module. This runs the componentsImport function
     // and registers everything correctly.
     ECS_IMPORT(world, components);
 
@@ -264,6 +276,14 @@ ecs_world_t *initWorldECS(){
 
 int main(){
     ecs_world_t *world = initWorldECS();
+    initMouseECS(world);
+
+    ECS_SYSTEM(world, ProcessPlayerInputSystem, EcsOnUpdate, Position, Size, Rotation, Owner,
+        .terms = {
+            { .id = ecs_id(MousePosition), .singleton = true },
+            { .id = ecs_id(IsClick),      .singleton = true }
+        });
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -286,9 +306,7 @@ int main(){
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    DataWrapper dataWrapper = {
-        .isClick = 0
-    };
+    DataWrapper dataWrapper;
 
     glfwSetWindowUserPointer(window, &dataWrapper);
 
@@ -341,18 +359,9 @@ int main(){
         //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        processInput(window, 0);
-        glfwGetCursorPos(window, &xpos, &ypos);
-
-        int winWidth, winHeight;
-        glfwGetWindowSize(window, &winWidth, &winHeight);
-        dataWrapper.mouseX = xpos * (double)WIDTH / winWidth;
-        dataWrapper.mouseY = ypos * (double)HEIGHT / winHeight;
-        dataWrapper.mouseY = HEIGHT - dataWrapper.mouseY;
-        //dataWrapper.mouseX = xpos;
-        //dataWrapper.mouseY = HEIGHT - ypos;
-        processPlayerInputECS(world);
-        processPlayerInput(&gameState, dataWrapper.mouseX, dataWrapper.mouseY, dataWrapper.isClick);
+        processInput(window, 0, world);
+        //processPlayerInputECS(world);
+        //processPlayerInput(&gameState, dataWrapper.mouseX, dataWrapper.mouseY, dataWrapper.isClick);
         layoutHands(window, &gameState);
 
         glUseProgram(backGroundProgram);

@@ -7,9 +7,7 @@
 #include <GLFW/glfw3.h>
 
 typedef struct {
-  int isClick;
-  float mouseX;
-  float mouseY;
+  ecs_entity_t mouseEntity;
 } DataWrapper;
 
 #endif

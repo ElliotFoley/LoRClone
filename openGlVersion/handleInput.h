@@ -90,4 +90,6 @@ ProcessedInput processPlayerInput(GameState *gameState, double xpos,
 
 ProcessedInput processPlayerInputECS(ecs_world_t *world);
 
+void ProcessPlayerInputSystem(ecs_iter_t *it);
+
 #endif

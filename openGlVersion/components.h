@@ -49,12 +49,23 @@ typedef struct {
   unsigned int shaderProgram;
 } ShaderProgram;
 
+typedef struct {
+  float x, y;
+} MousePosition;
+
+typedef struct {
+  int leftDown;
+} MouseButtonState;
+
 extern ECS_TAG_DECLARE(IsHovering);
 extern ECS_TAG_DECLARE(IsDragging);
 extern ECS_TAG_DECLARE(CardTag);
 extern ECS_TAG_DECLARE(UnitTag);
 extern ECS_TAG_DECLARE(PlayerTag);
 // extern ECS_TAG_DECLARE(BoardTile);
+
+extern ECS_COMPONENT_DECLARE(MousePosition);
+extern ECS_COMPONENT_DECLARE(MouseButtonState);
 
 extern ECS_COMPONENT_DECLARE(ManaCost);
 extern ECS_COMPONENT_DECLARE(Attack);

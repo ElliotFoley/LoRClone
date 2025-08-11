@@ -7,6 +7,9 @@ ECS_TAG_DECLARE(PlayerTag);
 ECS_TAG_DECLARE(IsHovering);
 ECS_TAG_DECLARE(IsDragging);
 
+ECS_COMPONENT_DECLARE(MousePosition);
+ECS_COMPONENT_DECLARE(MouseButtonState);
+
 ECS_COMPONENT_DECLARE(ManaCost);
 ECS_COMPONENT_DECLARE(Attack);
 ECS_COMPONENT_DECLARE(Health);
@@ -32,6 +35,9 @@ void componentsImport(ecs_world_t *world) {
     ECS_TAG(world, IsHovering);
     ECS_TAG(world, IsDragging);
     //ECS_TAG(world, BoardTile);
+
+    ECS_COMPONENT(world, MousePosition);
+    ECS_COMPONENT(world, MouseButtonState);
 
     ECS_COMPONENT(world, ManaCost);
     ECS_COMPONENT(world, Attack);

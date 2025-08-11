@@ -110,6 +110,31 @@ ProcessedInput processPlayerInputECS(ecs_world_t *world){
 
 }
 
+void ProcessPlayerInputSystem(ecs_iter_t *it){
+    Position *p = ecs_field(it, Position, 0);
+    Size *s = ecs_field(it, Size, 1);
+    Rotation *r = ecs_field(it, Rotation, 2);
+    Owner *o = ecs_field(it, Owner, 3);
+
+    const MousePosition *mousePos = ecs_singleton_get(it->world, MousePosition);
+    const MouseButtonState *mouseState = ecs_singleton_get(it->world, MouseButtonState);
+    int isClicked = 0;
+    //inner loop for enities in the table
+    for(int i = 0; i < it->count; i++){
+        ecs_entity_t e = it->entities[i];
+        if(isMouseOverRotatedCardECS(o[i], p[i], s[i], r[i], mousePos->x, mousePos->y) && !isClicked){
+            ecs_add(it->world, e, IsHovering);
+            if(mouseState->leftDown){
+                ecs_add(it->world, e, IsDragging);
+            }
+            isClicked = 1;
+        }
+        else{
+            ecs_remove(it->world, e, IsHovering);
+            ecs_remove(it->world, e, IsDragging);
+        }
+    }
+}
 
 ProcessedInput processPlayerInput(GameState *gameState, double xpos, double ypos, int isClick){
     ProcessedInput processedInput;

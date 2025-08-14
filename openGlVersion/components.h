@@ -2,6 +2,7 @@
 #define COMPONENTS_H
 #include "define.h"
 #include "flecs/flecs.h"
+#include <stdio.h>
 
 // components for cards for ECS
 typedef struct {
@@ -34,6 +35,13 @@ typedef struct {
 } EffectText;
 
 typedef struct {
+  // 2 total players
+  int playerHandSize[2];
+} HandSizes;
+typedef struct {
+  int index;
+} Index;
+typedef struct {
   float x, y;
 } Position;
 typedef struct {
@@ -43,11 +51,10 @@ typedef struct {
   float angle;
 } Rotation;
 typedef struct {
-  unsigned int vao;
-} VAO;
-typedef struct {
   unsigned int shaderProgram;
-} ShaderProgram;
+  unsigned int vao;
+  unsigned int texture;
+} Render;
 
 typedef struct {
   float x, y;
@@ -76,11 +83,12 @@ extern ECS_COMPONENT_DECLARE(Rarity);
 extern ECS_COMPONENT_DECLARE(Name);
 extern ECS_COMPONENT_DECLARE(ArtPath);
 extern ECS_COMPONENT_DECLARE(EffectText);
+extern ECS_COMPONENT_DECLARE(Index);
+extern ECS_COMPONENT_DECLARE(HandSizes);
 extern ECS_COMPONENT_DECLARE(Position);
 extern ECS_COMPONENT_DECLARE(Size);
 extern ECS_COMPONENT_DECLARE(Rotation);
-extern ECS_COMPONENT_DECLARE(VAO);
-extern ECS_COMPONENT_DECLARE(ShaderProgram);
+extern ECS_COMPONENT_DECLARE(Render);
 
 void componentsImport(ecs_world_t *world);
 

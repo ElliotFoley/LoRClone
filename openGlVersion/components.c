@@ -19,38 +19,43 @@ ECS_COMPONENT_DECLARE(Rarity);
 ECS_COMPONENT_DECLARE(Name);
 ECS_COMPONENT_DECLARE(ArtPath);
 ECS_COMPONENT_DECLARE(EffectText);
+ECS_COMPONENT_DECLARE(Index);
+ECS_COMPONENT_DECLARE(HandSizes);
 ECS_COMPONENT_DECLARE(Position);
 ECS_COMPONENT_DECLARE(Size);
 ECS_COMPONENT_DECLARE(Rotation);
-ECS_COMPONENT_DECLARE(VAO);
-ECS_COMPONENT_DECLARE(ShaderProgram);
+ECS_COMPONENT_DECLARE(Render);
 
 void componentsImport(ecs_world_t *world) {
 
     ECS_MODULE(world, components);
 
-    ECS_TAG(world, CardTag);
-    ECS_TAG(world, UnitTag);
-    ECS_TAG(world, PlayerTag);
-    ECS_TAG(world, IsHovering);
-    ECS_TAG(world, IsDragging);
+    ECS_TAG_DEFINE(world, CardTag);
+    ECS_TAG_DEFINE(world, UnitTag);
+    ECS_TAG_DEFINE(world, PlayerTag);
+    ECS_TAG_DEFINE(world, IsHovering);
+    ECS_TAG_DEFINE(world, IsDragging);
     //ECS_TAG(world, BoardTile);
 
-    ECS_COMPONENT(world, MousePosition);
-    ECS_COMPONENT(world, MouseButtonState);
+    ECS_COMPONENT_DEFINE(world, MousePosition);
+    ECS_COMPONENT_DEFINE(world, MouseButtonState);
 
-    ECS_COMPONENT(world, ManaCost);
-    ECS_COMPONENT(world, Attack);
-    ECS_COMPONENT(world, Health);
-    ECS_COMPONENT(world, CardType);
-    ECS_COMPONENT(world, Owner);
-    ECS_COMPONENT(world, Rarity);
-    ECS_COMPONENT(world, Name);
-    ECS_COMPONENT(world, ArtPath);
-    ECS_COMPONENT(world, EffectText);
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Size);
-    ECS_COMPONENT(world, Rotation);
-    ECS_COMPONENT(world, VAO);
-    ECS_COMPONENT(world, ShaderProgram);
+    ECS_COMPONENT_DEFINE(world, ManaCost);
+    ECS_COMPONENT_DEFINE(world, Attack);
+    ECS_COMPONENT_DEFINE(world, Health);
+    ECS_COMPONENT_DEFINE(world, CardType);
+    ECS_COMPONENT_DEFINE(world, Owner);
+    ECS_COMPONENT_DEFINE(world, Rarity);
+    ECS_COMPONENT_DEFINE(world, Name);
+    ECS_COMPONENT_DEFINE(world, ArtPath);
+    ECS_COMPONENT_DEFINE(world, EffectText);
+    ECS_COMPONENT_DEFINE(world, Index);
+    ECS_COMPONENT_DEFINE(world, HandSizes);
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Size);
+    ECS_COMPONENT_DEFINE(world, Rotation);
+    ECS_COMPONENT_DEFINE(world, Render);
+
+    printf("DEBUG: Address in components.c is %p, DEBUG: id = %d\n", (void*)&ecs_id(MousePosition), (int)ecs_id(MousePosition));
+    fflush(stdout);
 }

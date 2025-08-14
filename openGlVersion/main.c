@@ -169,8 +169,8 @@ void layoutCard(GLFWwindow *window, Card *card, int index, int playerId, int han
     }
     else{
         DataWrapper *dataWrapper = glfwGetWindowUserPointer(window);
-        card->xpos = dataWrapper->mouseX - card->width / 2 * playerSign;
-        card->ypos = dataWrapper->mouseY - card->height / 2 * playerSign;
+        //card->xpos = dataWrapper->mouseX - card->width / 2 * playerSign;
+        //card->ypos = dataWrapper->mouseY - card->height / 2 * playerSign;
     }
 
 
@@ -189,7 +189,61 @@ void layoutHands(GLFWwindow *window, GameState *gameState){
 }
 
 
-unsigned int setupCard(unsigned int cardProgram){
+void layoutHandsSystem(ecs_iter_t *it){
+    Position *pos = ecs_field(it, Position, 0);
+    Size *s = ecs_field(it, Size, 1);
+    Rotation *r = ecs_field(it, Rotation, 2);
+    Owner *owner = ecs_field(it, Owner, 3);
+    Index *index = ecs_field(it, Index, 4);
+    const HandSizes *handSizes = ecs_singleton_get(it->world, HandSizes);
+    const MousePosition *mousePos = ecs_singleton_get(it->world, MousePosition);
+
+    for(int i = 0; i < it->count; i++){
+        int playerId = owner[i].playerId;
+        int handSize = handSizes->playerHandSize[playerId];
+        float handCenterX = WIDTH / 2.0f;
+        float handCenterY = (playerId == PLAYER0) ? 180.0f : 1000.0f;
+        int playerSign = (playerId == PLAYER0) ? 1 : -1;
+
+        float radius = 1000.0f;
+        float maxAngleDeg = 30.0f;
+        float middle = (float)(handSize) / 2.0f;
+
+
+        float angleDeg = ((index->index - middle) / middle) * (maxAngleDeg / 2.0f);
+        float angleRad = glm_rad(angleDeg);
+
+
+        float xpos = handCenterX + (sinf(angleRad) * radius) * playerSign;
+        float ypos = handCenterY - (((1 - cosf(angleRad)) * radius)) * playerSign;
+
+        s[i].width = 100.0f;
+        s[i].height = 150.0f;
+
+        if(ecs_has(it->world, it->entities[i], IsHovering)){
+            s[i].width *= 2;
+            s[i].height *= 2;
+        }
+
+        if(!ecs_has(it->world, it->entities[i], IsDragging)) {
+            pos[i].x = xpos;
+            pos[i].y = ypos;
+        }
+        else{
+            pos[i].x = mousePos[i].x - s[i].width / 2 * playerSign;
+            pos[i].y = mousePos[i].y - s[i].height / 2 * playerSign;
+        }
+
+
+        r[i].angle = -angleDeg;
+        r[i].angle += 180.0f * playerId;
+
+    }
+
+}
+
+
+unsigned int setupCard(){
     float cardVertices[] = {
         0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
         0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
@@ -228,7 +282,7 @@ void initHandRender(Player *player, unsigned int cardProgram, unsigned int cardV
 }
 
 
-void drawCard(unsigned int cardProgram, unsigned int cardVAO, float xpos, float ypos, float xscale, float yscale, float rotation){
+void drawCard(unsigned int cardProgram, unsigned int cardVAO, unsigned int cardTexture, float xpos, float ypos, float xscale, float yscale, float rotation){
     mat4 model;
     vec3 translate = {xpos, ypos, 0.0f};
     glm_mat4_identity(model);
@@ -239,7 +293,20 @@ void drawCard(unsigned int cardProgram, unsigned int cardVAO, float xpos, float 
     glUniformMatrix4fv(glGetUniformLocation(cardProgram, "model"), 1, GL_FALSE, (float *)model);
 
     glBindVertexArray(cardVAO);
+    glUseProgram(cardProgram);
+    glBindTexture(GL_TEXTURE_2D, cardTexture);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+
+void drawGameStateSystem(ecs_iter_t *it){
+    Position *pos = ecs_field(it, Position, 0);
+    Size *s = ecs_field(it, Size, 1);
+    Rotation *r = ecs_field(it, Rotation, 2);
+    Render *render = ecs_field(it, Render, 3);
+    for(int i = 0; i < it->count; i++){
+        drawCard(render[i].shaderProgram, render[i].vao, render[i].texture, pos[i].x, pos[i].y, s[i].width, s[i].height, r[i].angle);
+    }
 }
 
 
@@ -250,7 +317,7 @@ void drawGameState(GameState *gameState){
             Card *card = &p->hand[i];
             unsigned int cardProgram = card->cardProgram;
             unsigned int cardVAO = card->cardVAO;
-            drawCard(cardProgram, cardVAO, card->xpos, card->ypos, card->width, card->height, card->rotation);
+            //drawCard(cardProgram, cardVAO, card->xpos, card->ypos, card->width, card->height, card->rotation);
         }
     }
 }
@@ -258,6 +325,8 @@ void drawGameState(GameState *gameState){
 
 void initMouseECS(ecs_world_t *world){
 
+    printf("DEBUG: Address in main.c is %p, DEBUG: id = %d\n", (void*)&ecs_id(MousePosition), (int)ecs_id(MousePosition));
+    fflush(stdout);
     ecs_singleton_set(world, MousePosition, {0, 0});
     ecs_singleton_set(world, MouseButtonState, {0});
 
@@ -274,16 +343,22 @@ ecs_world_t *initWorldECS(){
     return world;
 }
 
+
+void initGameStateECS(ecs_world_t *world){
+    HandSizes hs = {{0, 0}};
+    ecs_singleton_set_ptr(world, HandSizes, &hs);
+    unsigned int cardVAO = setupCard();
+    unsigned int cardTexture = genTexture("textures/Orca.png");
+    unsigned int cardProgram = linkShaders("shaders/cardVertex.glsl", "shaders/cardFragments.glsl");
+    for(int playerId = 0; playerId < 2; playerId++){
+        for(int i = 0; i < 5; i++){
+            initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture});
+        }
+    }
+}
+
+
 int main(){
-    ecs_world_t *world = initWorldECS();
-    initMouseECS(world);
-
-    ECS_SYSTEM(world, ProcessPlayerInputSystem, EcsOnUpdate, Position, Size, Rotation, Owner,
-        .terms = {
-            { .id = ecs_id(MousePosition), .singleton = true },
-            { .id = ecs_id(IsClick),      .singleton = true }
-        });
-
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -305,6 +380,25 @@ int main(){
     glViewport(0, 0, WIDTH, HEIGHT);
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    printf("test\n");
+    fflush(stdout);
+    ecs_world_t *world = initWorldECS();
+    printf("test1\n");
+    fflush(stdout);
+    initMouseECS(world);
+    printf("test2\n");
+    fflush(stdout);
+    initGameStateECS(world);
+    printf("test3\n");
+    fflush(stdout);
+
+    ECS_SYSTEM(world, ProcessPlayerInputSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner);
+    ECS_SYSTEM(world, drawGameStateSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Render);
+    ECS_SYSTEM(world, layoutHandsSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner, components.Index);
+
+    printf("test\n");
+    fflush(stdout);
 
     DataWrapper dataWrapper;
 
@@ -341,7 +435,7 @@ int main(){
     glUseProgram(cardProgram);
     mat4 projection;
     glm_ortho(0.0f, WIDTH, 0.0f, HEIGHT, -1.0f, 1.0f, projection);
-    unsigned int cardVAO = setupCard(cardProgram);
+    unsigned int cardVAO = setupCard();
     unsigned int cardTexture = genTexture("textures/Orca.png");
     glUniformMatrix4fv(glGetUniformLocation(cardProgram, "projection"), 1, GL_FALSE, (float*) projection);
     glUniform1i(glGetUniformLocation(cardProgram, "cardTexture"), 0);
@@ -362,16 +456,19 @@ int main(){
         processInput(window, 0, world);
         //processPlayerInputECS(world);
         //processPlayerInput(&gameState, dataWrapper.mouseX, dataWrapper.mouseY, dataWrapper.isClick);
-        layoutHands(window, &gameState);
+        //layoutHands(window, &gameState);
 
         glUseProgram(backGroundProgram);
         glBindTexture(GL_TEXTURE_2D, backGroundTexture);
         glBindVertexArray(backGroundVAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        glUseProgram(cardProgram);
-        glBindTexture(GL_TEXTURE_2D, cardTexture);
-        drawGameState(&gameState);
+
+        ecs_progress(world, 0);
+
+        //glUseProgram(cardProgram);
+        //glBindTexture(GL_TEXTURE_2D, cardTexture);
+        //drawGameState(&gameState);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

@@ -68,7 +68,7 @@ void addCard(Player *player, Card cardToAdd){
 }
 
 
-ecs_entity_t initCardECS(ecs_world_t *world, ManaCost manaCost, Name name, ArtPath artPath, Rarity rarity, EffectText effectText, Health health, Attack attack, CardType cardType){
+ecs_entity_t initCardECS(ecs_world_t *world, ManaCost manaCost, Name name, ArtPath artPath, Rarity rarity, EffectText effectText, Health health, Attack attack, CardType cardType, Owner owner, Index index, Render render){
     ecs_entity_t card = ecs_new(world);
     //Do note that this copies the data over so these values can go out of scope
     ecs_set_ptr(world, card, ManaCost, &manaCost);
@@ -78,17 +78,22 @@ ecs_entity_t initCardECS(ecs_world_t *world, ManaCost manaCost, Name name, ArtPa
     ecs_set_ptr(world, card, Health, &health);
     ecs_set_ptr(world, card, Attack, &attack);
     ecs_set_ptr(world, card, CardType, &cardType);
+    ecs_set_ptr(world, card, Owner, &owner);
+    ecs_set_ptr(world, card, Index, &index);
 
-    ecs_set(world, card, VAO, {0});
-    ecs_set(world, card, ShaderProgram, {0});
+    ecs_set_ptr(world, card, Render, &render);
     ecs_set(world, card, Size, {0, 0});
     ecs_set(world, card, Position, {0, 0});
     ecs_set(world, card, Rotation, {0});
     //Adds the card tag
     ecs_add(world, card, CardTag);
 
+    HandSizes *playerHandSizes = ecs_singleton_get_mut(world, HandSizes);
+    playerHandSizes->playerHandSize[owner.playerId]++;
+
     return card;
 }
+
 
 Card initCard(int manaCost, const char *name, const char *artPath, int rarity, const char *effectText, int health, int attack, CardType type){
     Card card;

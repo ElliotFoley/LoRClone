@@ -210,7 +210,7 @@ void layoutHandsSystem(ecs_iter_t *it){
         float middle = (float)(handSize) / 2.0f;
 
 
-        float angleDeg = ((index->index - middle) / middle) * (maxAngleDeg / 2.0f);
+        float angleDeg = ((index[i].index - middle) / middle) * (maxAngleDeg / 2.0f);
         float angleRad = glm_rad(angleDeg);
 
 
@@ -289,12 +289,12 @@ void drawCard(unsigned int cardProgram, unsigned int cardVAO, unsigned int cardT
     glm_translate(model, translate);
     glm_rotate_z(model, glm_rad(rotation), model);
     glm_scale(model, (vec3){xscale, yscale, 1.0f});
+    glUseProgram(cardProgram);
+    glBindTexture(GL_TEXTURE_2D, cardTexture);
 
     glUniformMatrix4fv(glGetUniformLocation(cardProgram, "model"), 1, GL_FALSE, (float *)model);
 
     glBindVertexArray(cardVAO);
-    glUseProgram(cardProgram);
-    glBindTexture(GL_TEXTURE_2D, cardTexture);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
@@ -348,6 +348,13 @@ void initGameStateECS(ecs_world_t *world){
     unsigned int cardVAO = setupCard();
     unsigned int cardTexture = genTexture("textures/Orca.png");
     unsigned int cardProgram = linkShaders("shaders/cardVertex.glsl", "shaders/cardFragments.glsl");
+
+    glUseProgram(cardProgram);
+
+    glUniform1i(glGetUniformLocation(cardProgram, "cardTexture"), 0);
+    mat4 projection;
+    glm_ortho(0.0f, WIDTH, 0.0f, HEIGHT, -1.0f, 1.0f, projection);
+    glUniformMatrix4fv(glGetUniformLocation(cardProgram, "projection"), 1, GL_FALSE, (float*) projection);
     for(int playerId = 0; playerId < 2; playerId++){
         for(int i = 0; i < 5; i++){
             initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture});
@@ -387,13 +394,6 @@ int main(){
     ECS_SYSTEM(world, drawGameStateSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Render);
     ECS_SYSTEM(world, layoutHandsSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner, components.Index);
 
-    printf("test\n");
-    fflush(stdout);
-
-    DataWrapper dataWrapper;
-
-    glfwSetWindowUserPointer(window, &dataWrapper);
-
     float backGroundVertices[] = {
         -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
         -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
@@ -421,44 +421,18 @@ int main(){
     glUniform1i(glGetUniformLocation(backGroundProgram, "backGroundTexture"), 0);
     glBindTexture(GL_TEXTURE_2D, backGroundTexture);
 
-    unsigned int cardProgram = linkShaders("shaders/cardVertex.glsl", "shaders/cardFragments.glsl");
-    glUseProgram(cardProgram);
-    mat4 projection;
-    glm_ortho(0.0f, WIDTH, 0.0f, HEIGHT, -1.0f, 1.0f, projection);
-    unsigned int cardVAO = setupCard();
-    unsigned int cardTexture = genTexture("textures/Orca.png");
-    glUniformMatrix4fv(glGetUniformLocation(cardProgram, "projection"), 1, GL_FALSE, (float*) projection);
-    glUniform1i(glGetUniformLocation(cardProgram, "cardTexture"), 0);
-    glBindTexture(GL_TEXTURE_2D, cardTexture);
-
-    double xpos, ypos;
-
-    GameState gameState = initGameState();
-    layoutHands(window, &gameState);
-    //This is not great I want to change this, but it works for now
-    initHandRender(&gameState.players[PLAYER0], cardProgram, cardVAO);
-    initHandRender(&gameState.players[PLAYER1], cardProgram, cardVAO);
-
     while(!glfwWindowShouldClose(window)){
         //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         processInput(window, 0, world);
-        //processPlayerInputECS(world);
-        //processPlayerInput(&gameState, dataWrapper.mouseX, dataWrapper.mouseY, dataWrapper.isClick);
-        //layoutHands(window, &gameState);
 
         glUseProgram(backGroundProgram);
         glBindTexture(GL_TEXTURE_2D, backGroundTexture);
         glBindVertexArray(backGroundVAO);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-
         ecs_progress(world, 0);
-
-        //glUseProgram(cardProgram);
-        //glBindTexture(GL_TEXTURE_2D, cardTexture);
-        //drawGameState(&gameState);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

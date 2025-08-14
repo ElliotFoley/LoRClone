@@ -1,34 +1,7 @@
 #include "gameLogic.h"
 
-void removeCard(Player *player, int index){
-	for(int i = index; i < player->handSize - 1; i++){
-		player->hand[index] = player->hand[index + 1];
-	}
-	memset(&player->hand[player->handSize - 1], 0, sizeof(Card));
-    player->handSize--;
-}
 
-
-Unit initUnit(char *name, char *artPath, int rarity, char *effectText, int health, int attack){
-    Unit unit;
-
-    unit.rarity = rarity;
-    unit.health = health;
-    unit.attack = attack;
-
-    sprintf(unit.name, "%s", name);
-    sprintf(unit.artPath, "%s", artPath);
-    sprintf(unit.effectText, "%s", effectText);
-
-    return unit;
-}
-
-
-Unit cardToUnit(Card card){
-    Unit newUnit = initUnit(card.name, card.artPath, card.rarity, card.effectText, card.health, card.attack);
-    return newUnit;
-}
-
+/*
 void addUnitAtIndex(Player *player, Unit unitToAdd, int unitIndex){
     if(player->unitSize >= MAXUNITSIZE){
         printf("Tried to add unit to a board that is full. Card didn't get added\n");
@@ -58,14 +31,7 @@ void playCard(GameState *gameState, int playerId, int cardIndex){
         }
     }
 }
-
-void addCard(Player *player, Card cardToAdd){
-    if(player->handSize >= MAXHANDSIZE){
-        printf("Tried to add card to hand that is full. Card didn't get added\n");
-        return;
-    }
-    player->hand[player->handSize++] = cardToAdd;
-}
+*/
 
 
 ecs_entity_t initCardECS(ecs_world_t *world, ManaCost manaCost, Name name, ArtPath artPath, Rarity rarity, EffectText effectText, Health health, Attack attack, CardType cardType, Owner owner, Index index, Render render){
@@ -95,59 +61,7 @@ ecs_entity_t initCardECS(ecs_world_t *world, ManaCost manaCost, Name name, ArtPa
 }
 
 
-Card initCard(int manaCost, const char *name, const char *artPath, int rarity, const char *effectText, int health, int attack, CardType type){
-    Card card;
-
-    card.manaCost = manaCost;
-    card.rarity = rarity;
-    card.health = health;
-    card.attack = attack;
-    card.type = type;
-    card.isDragging = 0;
-    card.isHovering = 0;
-
-    sprintf(card.name, "%s", name);
-    sprintf(card.artPath, "%s", artPath);
-    sprintf(card.effectText, "%s", effectText);
-
-    return card;
-}
-
-
-Player initPlayer(){
-    Player player;
-
-    player.hand = malloc(sizeof(Card) * MAXHANDSIZE);
-    player.deck = malloc(sizeof(Card) * MAXDECKSIZE);
-    player.board = malloc(sizeof(Card) * MAXUNITSIZE);
-    player.handSize = 0;
-    player.unitSize = 0;
-
-    return player;
-}
-
-
-GameState initGameState(){
-    GameState gameState;
-    gameState.players[PLAYER0] = initPlayer();
-    gameState.players[PLAYER1] = initPlayer();
-
-    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
-    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
-    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
-    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
-    addCard(&gameState.players[PLAYER0], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
-
-    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
-    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
-    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
-    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
-    addCard(&gameState.players[PLAYER1], initCard(0, "orca", "", 0, "", 0, 0, (CardType){CARDTYPE_UNIT}));
-
-    return gameState;
-}
-
-
+/*
 int updateGameState(GameState* gameState, ProcessedInput* userIntent){
 	InputTarget input = userIntent->target;
 	switch(gameState->state){
@@ -171,3 +85,4 @@ int updateGameState(GameState* gameState, ProcessedInput* userIntent){
 	}
     return 0;
 }
+*/

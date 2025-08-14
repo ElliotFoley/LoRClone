@@ -138,57 +138,6 @@ unsigned int linkShaders(const char *vertexFileName, const char *fragmentFileNam
 }
 
 
-void layoutCard(GLFWwindow *window, Card *card, int index, int playerId, int handSize){
-    float handCenterX = WIDTH / 2.0f;
-    float handCenterY = (playerId == PLAYER0) ? 180.0f : 1000.0f;
-    int playerSign = (playerId == PLAYER0) ? 1 : -1;
-
-    float radius = 1000.0f;
-    float maxAngleDeg = 30.0f;
-    float middle = (float)(handSize) / 2.0f;
-
-
-    float angleDeg = ((index - middle) / middle) * (maxAngleDeg / 2.0f);
-    float angleRad = glm_rad(angleDeg);
-
-
-    float xpos = handCenterX + (sinf(angleRad) * radius) * playerSign;
-    float ypos = handCenterY - (((1 - cosf(angleRad)) * radius)) * playerSign;
-
-    card->width = 100.0f;
-    card->height = 150.0f;
-
-    if(card->isHovering){
-        card->width *= 2;
-        card->height *= 2;
-    }
-
-    if(!card->isDragging) {
-        card->xpos = xpos;
-        card->ypos = ypos;
-    }
-    else{
-        DataWrapper *dataWrapper = glfwGetWindowUserPointer(window);
-        //card->xpos = dataWrapper->mouseX - card->width / 2 * playerSign;
-        //card->ypos = dataWrapper->mouseY - card->height / 2 * playerSign;
-    }
-
-
-    card->rotation = -angleDeg;
-    card->rotation += 180.0f * playerId;
-}
-
-
-void layoutHands(GLFWwindow *window, GameState *gameState){
-    for(int player = 0; player < 2; player++){
-        Player *p = &gameState->players[player];
-        for(int i = 0; i < p->handSize; i++){
-            layoutCard(window, &p->hand[i], i, player, p->handSize);
-        }
-    }
-}
-
-
 void layoutHandsSystem(ecs_iter_t *it){
     Position *pos = ecs_field(it, Position, 0);
     Size *s = ecs_field(it, Size, 1);
@@ -269,19 +218,6 @@ unsigned int setupCard(){
 }
 
 
-void initCardRender(Card *card, unsigned int cardProgram, unsigned int cardVAO){
-    card->cardProgram = cardProgram;
-    card->cardVAO = cardVAO;
-}
-
-
-void initHandRender(Player *player, unsigned int cardProgram, unsigned int cardVAO){
-    for(int i = 0; i < player->handSize; i++){
-        initCardRender(&player->hand[i], cardProgram, cardVAO);
-    }
-}
-
-
 void drawCard(unsigned int cardProgram, unsigned int cardVAO, unsigned int cardTexture, float xpos, float ypos, float xscale, float yscale, float rotation){
     mat4 model;
     vec3 translate = {xpos, ypos, 0.0f};
@@ -306,19 +242,6 @@ void drawGameStateSystem(ecs_iter_t *it){
     Render *render = ecs_field(it, Render, 3);
     for(int i = 0; i < it->count; i++){
         drawCard(render[i].shaderProgram, render[i].vao, render[i].texture, pos[i].x, pos[i].y, s[i].width, s[i].height, r[i].angle);
-    }
-}
-
-
-void drawGameState(GameState *gameState){
-    for(int player = 0; player < 2; player++){
-        Player *p = &gameState->players[player];
-        for(int i = 0; i < p->handSize; i++){
-            Card *card = &p->hand[i];
-            unsigned int cardProgram = card->cardProgram;
-            unsigned int cardVAO = card->cardVAO;
-            //drawCard(cardProgram, cardVAO, card->xpos, card->ypos, card->width, card->height, card->rotation);
-        }
     }
 }
 

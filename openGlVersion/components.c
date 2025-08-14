@@ -56,6 +56,4 @@ void componentsImport(ecs_world_t *world) {
     ECS_COMPONENT_DEFINE(world, Rotation);
     ECS_COMPONENT_DEFINE(world, Render);
 
-    printf("DEBUG: Address in components.c is %p, DEBUG: id = %d\n", (void*)&ecs_id(MousePosition), (int)ecs_id(MousePosition));
-    fflush(stdout);
 }

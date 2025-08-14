@@ -325,8 +325,6 @@ void drawGameState(GameState *gameState){
 
 void initMouseECS(ecs_world_t *world){
 
-    printf("DEBUG: Address in main.c is %p, DEBUG: id = %d\n", (void*)&ecs_id(MousePosition), (int)ecs_id(MousePosition));
-    fflush(stdout);
     ecs_singleton_set(world, MousePosition, {0, 0});
     ecs_singleton_set(world, MouseButtonState, {0});
 
@@ -381,17 +379,9 @@ int main(){
     glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
     //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    printf("test\n");
-    fflush(stdout);
     ecs_world_t *world = initWorldECS();
-    printf("test1\n");
-    fflush(stdout);
     initMouseECS(world);
-    printf("test2\n");
-    fflush(stdout);
     initGameStateECS(world);
-    printf("test3\n");
-    fflush(stdout);
 
     ECS_SYSTEM(world, ProcessPlayerInputSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner);
     ECS_SYSTEM(world, drawGameStateSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Render);

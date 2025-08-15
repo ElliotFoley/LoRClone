@@ -34,7 +34,7 @@ void playCard(GameState *gameState, int playerId, int cardIndex){
 */
 
 
-ecs_entity_t initCardECS(ecs_world_t *world, ManaCost manaCost, Name name, ArtPath artPath, Rarity rarity, EffectText effectText, Health health, Attack attack, CardType cardType, Owner owner, Index index, Render render){
+ecs_entity_t initCardECS(ecs_world_t *world, ManaCost manaCost, Name name, ArtPath artPath, Rarity rarity, EffectText effectText, Health health, Attack attack, CardType cardType, Owner owner, Index index, Render render, Zone zone){
     ecs_entity_t card = ecs_new(world);
     //Do note that this copies the data over so these values can go out of scope
     ecs_set_ptr(world, card, ManaCost, &manaCost);
@@ -46,6 +46,7 @@ ecs_entity_t initCardECS(ecs_world_t *world, ManaCost manaCost, Name name, ArtPa
     ecs_set_ptr(world, card, CardType, &cardType);
     ecs_set_ptr(world, card, Owner, &owner);
     ecs_set_ptr(world, card, Index, &index);
+    ecs_set_ptr(world, card, Zone, &zone);
 
     ecs_set_ptr(world, card, Render, &render);
     ecs_set(world, card, Size, {0, 0});

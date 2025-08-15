@@ -280,7 +280,10 @@ void initGameStateECS(ecs_world_t *world){
     glUniformMatrix4fv(glGetUniformLocation(cardProgram, "projection"), 1, GL_FALSE, (float*) projection);
     for(int playerId = 0; playerId < 2; playerId++){
         for(int i = 0; i < 5; i++){
-            initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture});
+            ecs_entity_t card = initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture}, (Zone){ZONE_HAND});
+                ecs_entity_to_json_desc_t orca = ECS_ENTITY_TO_JSON_INIT;
+                char *test = ecs_entity_to_json(world, card, &orca);
+                printf("%s\n", test);
         }
     }
 }

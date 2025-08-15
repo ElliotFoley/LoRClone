@@ -1,5 +1,9 @@
 #include "components.h"
 
+//Unit types
+ECS_TAG_DECLARE(Robot);
+ECS_TAG_DECLARE(Penguin);
+
 ECS_TAG_DECLARE(CardTag);
 ECS_TAG_DECLARE(UnitTag);
 ECS_TAG_DECLARE(PlayerTag);
@@ -10,6 +14,7 @@ ECS_TAG_DECLARE(IsDragging);
 ECS_COMPONENT_DECLARE(MousePosition);
 ECS_COMPONENT_DECLARE(MouseButtonState);
 
+ECS_COMPONENT_DECLARE(Zone);
 ECS_COMPONENT_DECLARE(ManaCost);
 ECS_COMPONENT_DECLARE(Attack);
 ECS_COMPONENT_DECLARE(Health);
@@ -26,9 +31,19 @@ ECS_COMPONENT_DECLARE(Size);
 ECS_COMPONENT_DECLARE(Rotation);
 ECS_COMPONENT_DECLARE(Render);
 
+ECS_COMPONENT_DECLARE(OnPlay);
+ECS_COMPONENT_DECLARE(OnSummon);
+ECS_COMPONENT_DECLARE(OnDeath);
+ECS_COMPONENT_DECLARE(OnAura);
+ECS_COMPONENT_DECLARE(OnStartTurn);
+ECS_COMPONENT_DECLARE(OnEndTurn);
+
 void componentsImport(ecs_world_t *world) {
 
     ECS_MODULE(world, components);
+
+    ECS_TAG_DEFINE(world, Robot);
+    ECS_TAG_DEFINE(world, Penguin);
 
     ECS_TAG_DEFINE(world, CardTag);
     ECS_TAG_DEFINE(world, UnitTag);
@@ -40,6 +55,7 @@ void componentsImport(ecs_world_t *world) {
     ECS_COMPONENT_DEFINE(world, MousePosition);
     ECS_COMPONENT_DEFINE(world, MouseButtonState);
 
+    ECS_COMPONENT_DEFINE(world, Zone);
     ECS_COMPONENT_DEFINE(world, ManaCost);
     ECS_COMPONENT_DEFINE(world, Attack);
     ECS_COMPONENT_DEFINE(world, Health);
@@ -56,4 +72,10 @@ void componentsImport(ecs_world_t *world) {
     ECS_COMPONENT_DEFINE(world, Rotation);
     ECS_COMPONENT_DEFINE(world, Render);
 
+    ECS_COMPONENT_DEFINE(world, OnPlay);
+    ECS_COMPONENT_DEFINE(world, OnSummon);
+    ECS_COMPONENT_DEFINE(world, OnDeath);
+    ECS_COMPONENT_DEFINE(world, OnAura);
+    ECS_COMPONENT_DEFINE(world, OnStartTurn);
+    ECS_COMPONENT_DEFINE(world, OnEndTurn);
 }

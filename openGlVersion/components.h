@@ -5,14 +5,17 @@
 #include <stdio.h>
 
 // components for cards for ECS
+
+typedef enum {
+  ZONE_DECK,
+  ZONE_HAND,
+  ZONE_BOARD,
+  ZONE_ATTACK_BOARD,
+  ZONE_DISCARD
+} ZoneEnum;
+
 typedef struct {
-  enum {
-    ZONE_DECK,
-    ZONE_HAND,
-    ZONE_BOARD,
-    ZONE_ATTACK_BOARD,
-    ZONE_DISCARD
-  } zone;
+  ZoneEnum zone;
 } Zone;
 typedef struct {
   int manaCost;
@@ -23,8 +26,10 @@ typedef struct {
 typedef struct {
   int health;
 } Health;
+
+typedef enum { CARDTYPE_UNIT, CARDTYPE_SPELL } CardTypeEnum;
 typedef struct {
-  enum { CARDTYPE_UNIT, CARDTYPE_SPELL } cardType;
+  CardTypeEnum type;
 } CardType;
 typedef struct {
   int playerId;
@@ -34,13 +39,13 @@ typedef struct {
 } Rarity;
 
 typedef struct {
-  char name[MAXSTRLEN];
+  ecs_string_t name;
 } Name;
 typedef struct {
-  char artPath[MAXSTRLEN];
+  ecs_string_t artPath;
 } ArtPath;
 typedef struct {
-  char effectText[MAXSTRLEN];
+  ecs_string_t effectText;
 } EffectText;
 
 typedef struct {

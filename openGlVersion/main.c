@@ -343,7 +343,7 @@ int main(){
     unsigned int backGroundProgram = linkShaders("shaders/backGroundVertex.glsl", "shaders/backGroundFragments.glsl");
     glUseProgram(backGroundProgram);
 
-    unsigned int backGroundTexture = genTexture("textures/Board1.png");
+    unsigned int backGroundTexture = genTexture("textures/Board2.png");
     glUniform1i(glGetUniformLocation(backGroundProgram, "backGroundTexture"), 0);
     glBindTexture(GL_TEXTURE_2D, backGroundTexture);
 

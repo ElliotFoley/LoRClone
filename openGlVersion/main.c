@@ -138,55 +138,79 @@ unsigned int linkShaders(const char *vertexFileName, const char *fragmentFileNam
 }
 
 
-void layoutHandsSystem(ecs_iter_t *it){
+void layoutGameStateSystem(ecs_iter_t *it){
     Position *pos = ecs_field(it, Position, 0);
     Size *s = ecs_field(it, Size, 1);
     Rotation *r = ecs_field(it, Rotation, 2);
     Owner *owner = ecs_field(it, Owner, 3);
     Index *index = ecs_field(it, Index, 4);
+    Zone *zone = ecs_field(it, Zone, 5);
     const HandSizes *handSizes = ecs_singleton_get(it->world, HandSizes);
     const MousePosition *mousePos = ecs_singleton_get(it->world, MousePosition);
+    const BoardSizes *boardSizes = ecs_singleton_get(it->world, BoardSizes);
 
     for(int i = 0; i < it->count; i++){
-        int playerId = owner[i].playerId;
-        int handSize = handSizes->playerHandSize[playerId];
-        float handCenterX = WIDTH / 2.0f;
-        float handCenterY = (playerId == PLAYER0) ? 180.0f : 1000.0f;
-        int playerSign = (playerId == PLAYER0) ? 1 : -1;
+        if(zone[i].zone == ZONE_HAND){
+            int playerId = owner[i].playerId;
+            int handSize = handSizes->playerHandSize[playerId];
+            float handCenterX = WIDTH / 2.0f;
+            float handCenterY = (playerId == PLAYER0) ? 180.0f : 1000.0f;
+            int playerSign = (playerId == PLAYER0) ? 1 : -1;
 
-        float radius = 1000.0f;
-        float maxAngleDeg = 30.0f;
-        float middle = (float)(handSize) / 2.0f;
-
-
-        float angleDeg = ((index[i].index - middle) / middle) * (maxAngleDeg / 2.0f);
-        float angleRad = glm_rad(angleDeg);
+            float radius = 1000.0f;
+            float maxAngleDeg = 30.0f;
+            float middle = (float)(handSize) / 2.0f;
 
 
-        float xpos = handCenterX + (sinf(angleRad) * radius) * playerSign;
-        float ypos = handCenterY - (((1 - cosf(angleRad)) * radius)) * playerSign;
+            float angleDeg = ((index[i].index - middle) / middle) * (maxAngleDeg / 2.0f);
+            float angleRad = glm_rad(angleDeg);
 
-        s[i].width = 100.0f;
-        s[i].height = 150.0f;
 
-        if(ecs_has(it->world, it->entities[i], IsHovering)){
-            s[i].width *= 2;
-            s[i].height *= 2;
+            float xpos = handCenterX + (sinf(angleRad) * radius) * playerSign;
+            float ypos = handCenterY - (((1 - cosf(angleRad)) * radius)) * playerSign;
+
+            s[i].width = 100.0f;
+            s[i].height = 150.0f;
+
+            if(ecs_has(it->world, it->entities[i], IsHovering)){
+                s[i].width *= 2;
+                s[i].height *= 2;
+            }
+
+            if(!ecs_has(it->world, it->entities[i], IsDragging)) {
+                pos[i].x = xpos;
+                pos[i].y = ypos;
+            }
+            else{
+                pos[i].x = mousePos[i].x - s[i].width / 2 * playerSign;
+                pos[i].y = mousePos[i].y - s[i].height / 2 * playerSign;
+            }
+
+
+            r[i].angle = -angleDeg;
+            r[i].angle += 180.0f * playerId;
         }
+        else if(zone[i].zone == ZONE_BOARD){
+            int playerId = owner[i].playerId;
+            int unitCount = boardSizes->playerBoardSize[playerId];
+            float unitWidth = 150.0f;
+            float unitHeight = 100.0f;
 
-        if(!ecs_has(it->world, it->entities[i], IsDragging)) {
-            pos[i].x = xpos;
-            pos[i].y = ypos;
+            //compensating for the rotation
+            float boardLeftX  = WIDTH * 0.2f - ((playerId == PLAYER0) ? unitWidth : 0);
+            float boardRightX = WIDTH * 0.8f - ((playerId == PLAYER0) ? unitWidth : 0);
+            float boardY      = HEIGHT * (playerId == PLAYER0 ? 0.35f : 0.65f);
+
+            float slotWidth = (boardRightX - boardLeftX) / (float)unitCount;
+            float centerX = boardLeftX + index[i].index * slotWidth + slotWidth /2;
+
+            s[i].width = unitWidth;
+            s[i].height = unitHeight;
+
+            pos[i].x = centerX;
+            pos[i].y = boardY;
+            r[i].angle = (playerId == PLAYER0) ? 0 : 180.0f;
         }
-        else{
-            pos[i].x = mousePos[i].x - s[i].width / 2 * playerSign;
-            pos[i].y = mousePos[i].y - s[i].height / 2 * playerSign;
-        }
-
-
-        r[i].angle = -angleDeg;
-        r[i].angle += 180.0f * playerId;
-
     }
 
 }
@@ -268,6 +292,8 @@ ecs_world_t *initWorldECS(){
 void initGameStateECS(ecs_world_t *world){
     HandSizes hs = {{0, 0}};
     ecs_singleton_set_ptr(world, HandSizes, &hs);
+    BoardSizes bs = {{0, 0}};
+    ecs_singleton_set_ptr(world, BoardSizes, &bs);
     unsigned int cardVAO = setupCard();
     unsigned int cardTexture = genTexture("textures/Orca.png");
     unsigned int cardProgram = linkShaders("shaders/cardVertex.glsl", "shaders/cardFragments.glsl");
@@ -278,12 +304,11 @@ void initGameStateECS(ecs_world_t *world){
     mat4 projection;
     glm_ortho(0.0f, WIDTH, 0.0f, HEIGHT, -1.0f, 1.0f, projection);
     glUniformMatrix4fv(glGetUniformLocation(cardProgram, "projection"), 1, GL_FALSE, (float*) projection);
+
     for(int playerId = 0; playerId < 2; playerId++){
-        for(int i = 0; i < 5; i++){
-            ecs_entity_t card = initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture}, (Zone){ZONE_HAND});
-                ecs_entity_to_json_desc_t orca = ECS_ENTITY_TO_JSON_INIT;
-                char *test = ecs_entity_to_json(world, card, &orca);
-                printf("%s\n", test);
+        for(int i = 0; i < 2; i++){
+            initUnitECS(world, (ManaCost){0}, (Name){"OrcaUnit"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture}, (Zone){ZONE_BOARD});
+            initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture}, (Zone){ZONE_HAND});
         }
     }
 }
@@ -318,7 +343,7 @@ int main(){
 
     ECS_SYSTEM(world, ProcessPlayerInputSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner);
     ECS_SYSTEM(world, drawGameStateSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Render);
-    ECS_SYSTEM(world, layoutHandsSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner, components.Index);
+    ECS_SYSTEM(world, layoutGameStateSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner, components.Index, components.Zone);
 
     float backGroundVertices[] = {
         -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,

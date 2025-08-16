@@ -81,16 +81,19 @@ void ProcessPlayerInputSystem(ecs_iter_t *it){
 
     const MousePosition *mousePos = ecs_singleton_get(it->world, MousePosition);
     const MouseButtonState *mouseState = ecs_singleton_get(it->world, MouseButtonState);
-    int isClicked = 0;
+    int hasClicked = 0;
     //inner loop for enities in the table
     for(int i = 0; i < it->count; i++){
         ecs_entity_t e = it->entities[i];
-        if(isMouseOverRotatedCardECS(o[i], p[i], s[i], r[i], mousePos->x, mousePos->y) && !isClicked){
+        if(isMouseOverRotatedCardECS(o[i], p[i], s[i], r[i], mousePos->x, mousePos->y) && !hasClicked){
             ecs_add(it->world, e, IsHovering);
             if(mouseState->leftDown){
                 ecs_add(it->world, e, IsDragging);
             }
-            isClicked = 1;
+            else{
+                ecs_remove(it->world, e, IsDragging);
+            }
+            hasClicked = 1;
         }
         else{
             ecs_remove(it->world, e, IsHovering);

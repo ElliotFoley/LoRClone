@@ -53,6 +53,9 @@ typedef struct {
   int playerHandSize[2];
 } HandSizes;
 typedef struct {
+  int playerBoardSize[2];
+} BoardSizes;
+typedef struct {
   int index;
 } Index;
 typedef struct {
@@ -157,6 +160,7 @@ extern ECS_COMPONENT_DECLARE(ArtPath);
 extern ECS_COMPONENT_DECLARE(EffectText);
 extern ECS_COMPONENT_DECLARE(Index);
 extern ECS_COMPONENT_DECLARE(HandSizes);
+extern ECS_COMPONENT_DECLARE(BoardSizes);
 extern ECS_COMPONENT_DECLARE(Position);
 extern ECS_COMPONENT_DECLARE(Size);
 extern ECS_COMPONENT_DECLARE(Rotation);

@@ -62,6 +62,31 @@ ecs_entity_t initCardECS(ecs_world_t *world, ManaCost manaCost, Name name, ArtPa
 }
 
 
+ecs_entity_t initUnitECS(ecs_world_t *world, ManaCost manaCost, Name name, ArtPath artPath, Rarity rarity, EffectText effectText, Health health, Attack attack, Owner owner, Index index, Render render, Zone zone){
+    ecs_entity_t unit = ecs_new(world);
+    //Do note that this copies the data over so these values can go out of scope
+    ecs_set_ptr(world, unit, ManaCost, &manaCost);
+    ecs_set_ptr(world, unit, Name, &name);
+    ecs_set_ptr(world, unit, ArtPath, &artPath);
+    ecs_set_ptr(world, unit, EffectText, &effectText);
+    ecs_set_ptr(world, unit, Health, &health);
+    ecs_set_ptr(world, unit, Attack, &attack);
+    ecs_set_ptr(world, unit, Owner, &owner);
+    ecs_set_ptr(world, unit, Index, &index);
+    ecs_set_ptr(world, unit, Zone, &zone);
+
+    ecs_set_ptr(world, unit, Render, &render);
+    ecs_set(world, unit, Size, {0, 0});
+    ecs_set(world, unit, Position, {0, 0});
+    ecs_set(world, unit, Rotation, {0});
+    //Adds the card tag
+    ecs_add(world, unit, UnitTag);
+
+    BoardSizes *playerBoardSizes = ecs_singleton_get_mut(world, BoardSizes);
+    playerBoardSizes->playerBoardSize[owner.playerId]++;
+
+    return unit;
+}
 /*
 int updateGameState(GameState* gameState, ProcessedInput* userIntent){
 	InputTarget input = userIntent->target;

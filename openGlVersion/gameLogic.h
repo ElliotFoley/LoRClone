@@ -13,6 +13,11 @@ ecs_entity_t initCardECS(ecs_world_t *world, ManaCost manaCost, Name name,
                          Health health, Attack attack, CardType cardType,
                          Owner owner, Index index, Render render, Zone zone);
 
+ecs_entity_t initUnitECS(ecs_world_t *world, ManaCost manaCost, Name name,
+                         ArtPath artPath, Rarity rarity, EffectText effectText,
+                         Health health, Attack attack, Owner owner, Index index,
+                         Render render, Zone zone);
+
 // void resolveAttack(GameState gameState);
 
 #endif

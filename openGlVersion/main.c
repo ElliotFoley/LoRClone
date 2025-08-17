@@ -150,14 +150,15 @@ void layoutGameStateSystem(ecs_iter_t *it){
     const BoardSizes *boardSizes = ecs_singleton_get(it->world, BoardSizes);
 
     for(int i = 0; i < it->count; i++){
-        if(zone[i].zone == ZONE_HAND){
             int playerId = owner[i].playerId;
+            int playerSign = (playerId == PLAYER0) ? 1 : -1;
+        if(zone[i].zone == ZONE_HAND){
             int handSize = handSizes->playerHandSize[playerId];
             float handCenterX = WIDTH / 2.0f;
             float handCenterY = (playerId == PLAYER0) ? 180.0f : 1000.0f;
-            int playerSign = (playerId == PLAYER0) ? 1 : -1;
 
-            float radius = 1000.0f;
+            //float radius = 1000.0f;
+            float radius = handSize * 200.0f;
             float maxAngleDeg = 30.0f;
             float middle = (float)(handSize) / 2.0f;
 
@@ -173,10 +174,11 @@ void layoutGameStateSystem(ecs_iter_t *it){
             s[i].height = 150.0f;
 
             if(ecs_has(it->world, it->entities[i], IsHovering)){
-                s[i].width *= 2;
-                s[i].height *= 2;
+                s[i].width *= 1.5f;
+                s[i].height *= 1.5f;
             }
 
+            r[i].angle = -angleDeg;
             if(!ecs_has(it->world, it->entities[i], IsDragging)) {
                 pos[i].x = xpos;
                 pos[i].y = ypos;
@@ -184,10 +186,13 @@ void layoutGameStateSystem(ecs_iter_t *it){
             else{
                 pos[i].x = mousePos[i].x - s[i].width / 2 * playerSign;
                 pos[i].y = mousePos[i].y - s[i].height / 2 * playerSign;
+                r[i].angle = 0;
             }
 
+            if(handSize == 1){
+                r[i].angle = 0;
+            }
 
-            r[i].angle = -angleDeg;
             r[i].angle += 180.0f * playerId;
         }
         else if(zone[i].zone == ZONE_BOARD){
@@ -207,8 +212,19 @@ void layoutGameStateSystem(ecs_iter_t *it){
             s[i].width = unitWidth;
             s[i].height = unitHeight;
 
-            pos[i].x = centerX;
-            pos[i].y = boardY;
+            if(ecs_has(it->world, it->entities[i], IsHovering)){
+                s[i].width *= 1.5f;
+                s[i].height *= 1.5f;
+            }
+
+            if(!ecs_has(it->world, it->entities[i], IsDragging)){
+                pos[i].x = centerX;
+                pos[i].y = boardY;
+            }
+            else{
+                pos[i].x = mousePos[i].x - s[i].width / 2 * playerSign;
+                pos[i].y = mousePos[i].y - s[i].height / 2 * playerSign;
+            }
             r[i].angle = (playerId == PLAYER0) ? 0 : 180.0f;
         }
     }
@@ -239,6 +255,31 @@ unsigned int setupCard(){
     glEnableVertexAttribArray(1);
 
     return cardVAO;
+}
+
+
+unsigned int setupBackGround(){
+    float backGroundVertices[] = {
+        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+        -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+        1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+        1.0f, 1.0f, 0.0f, 1.0f, 1.0f
+    };
+    unsigned int backGroundVAO;
+    glGenVertexArrays(1, &backGroundVAO);
+    unsigned int backGroundVBO;
+    glGenBuffers(1, &backGroundVBO);  //Creates buffer for array data
+    glBindVertexArray(backGroundVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, backGroundVBO);  //binds buffer to the GL_ARRAY_BUFFER
+    glBufferData(GL_ARRAY_BUFFER, sizeof(backGroundVertices), backGroundVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);  //telling the openGL state box how to read the inputVector
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));  //telling the openGL state box how to read the inputVector
+    glEnableVertexAttribArray(1);
+
+    return backGroundVAO;
 }
 
 
@@ -278,22 +319,14 @@ void initMouseECS(ecs_world_t *world){
 }
 
 
-ecs_world_t *initWorldECS(){
-    ecs_world_t *world = ecs_init();
-
-    // Import the module. This runs the componentsImport function
-    // and registers everything correctly.
-    ECS_IMPORT(world, components);
-
-    return world;
-}
-
-
 void initGameStateECS(ecs_world_t *world){
     HandSizes hs = {{0, 0}};
     ecs_singleton_set_ptr(world, HandSizes, &hs);
     BoardSizes bs = {{0, 0}};
     ecs_singleton_set_ptr(world, BoardSizes, &bs);
+    EntitySelectedState es = {0};
+    ecs_singleton_set_ptr(world, EntitySelectedState, &es);
+
     unsigned int cardVAO = setupCard();
     unsigned int cardTexture = genTexture("textures/Orca.png");
     unsigned int cardProgram = linkShaders("shaders/cardVertex.glsl", "shaders/cardFragments.glsl");
@@ -306,11 +339,28 @@ void initGameStateECS(ecs_world_t *world){
     glUniformMatrix4fv(glGetUniformLocation(cardProgram, "projection"), 1, GL_FALSE, (float*) projection);
 
     for(int playerId = 0; playerId < 2; playerId++){
-        for(int i = 0; i < 2; i++){
+        for(int i = 0; i < 5; i++){
             initUnitECS(world, (ManaCost){0}, (Name){"OrcaUnit"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture}, (Zone){ZONE_BOARD});
             initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture}, (Zone){ZONE_HAND});
         }
     }
+}
+
+
+ecs_world_t *initWorldECS(){
+    ecs_world_t *world = ecs_init();
+
+    // Import the module. This runs the componentsImport function
+    // and registers everything correctly.
+    ECS_IMPORT(world, components);
+    initMouseECS(world);
+    initGameStateECS(world);
+
+    ECS_SYSTEM(world, ProcessPlayerInputSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner);
+    ECS_SYSTEM(world, drawGameStateSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Render);
+    ECS_SYSTEM(world, layoutGameStateSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner, components.Index, components.Zone);
+
+    return world;
 }
 
 
@@ -338,39 +388,12 @@ int main(){
     //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     ecs_world_t *world = initWorldECS();
-    initMouseECS(world);
-    initGameStateECS(world);
 
-    ECS_SYSTEM(world, ProcessPlayerInputSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner);
-    ECS_SYSTEM(world, drawGameStateSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Render);
-    ECS_SYSTEM(world, layoutGameStateSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner, components.Index, components.Zone);
-
-    float backGroundVertices[] = {
-        -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
-        -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-        1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-        -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-        1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-        1.0f, 1.0f, 0.0f, 1.0f, 1.0f
-    };
-    unsigned int backGroundVAO;
-    glGenVertexArrays(1, &backGroundVAO);
-    unsigned int backGroundVBO;
-    glGenBuffers(1, &backGroundVBO);  //Creates buffer for array data
-    glBindVertexArray(backGroundVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, backGroundVBO);  //binds buffer to the GL_ARRAY_BUFFER
-    glBufferData(GL_ARRAY_BUFFER, sizeof(backGroundVertices), backGroundVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);  //telling the openGL state box how to read the inputVector
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));  //telling the openGL state box how to read the inputVector
-    glEnableVertexAttribArray(1);
-
+    unsigned int backGroundVAO = setupBackGround();
     unsigned int backGroundProgram = linkShaders("shaders/backGroundVertex.glsl", "shaders/backGroundFragments.glsl");
     glUseProgram(backGroundProgram);
-
     unsigned int backGroundTexture = genTexture("textures/Board2.png");
     glUniform1i(glGetUniformLocation(backGroundProgram, "backGroundTexture"), 0);
-    glBindTexture(GL_TEXTURE_2D, backGroundTexture);
 
     while(!glfwWindowShouldClose(window)){
         //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);

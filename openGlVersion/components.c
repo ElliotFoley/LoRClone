@@ -13,6 +13,7 @@ ECS_TAG_DECLARE(IsDragging);
 
 ECS_COMPONENT_DECLARE(MousePosition);
 ECS_COMPONENT_DECLARE(MouseButtonState);
+ECS_COMPONENT_DECLARE(EntitySelectedState);
 
 ECS_COMPONENT_DECLARE(Zone);
 ECS_COMPONENT_DECLARE(ManaCost);
@@ -55,6 +56,7 @@ void componentsImport(ecs_world_t *world) {
 
     ECS_COMPONENT_DEFINE(world, MousePosition);
     ECS_COMPONENT_DEFINE(world, MouseButtonState);
+    ECS_COMPONENT_DEFINE(world, EntitySelectedState);
 
     ECS_COMPONENT_DEFINE(world, Zone);
     ecs_entity_t zoneEnumId = ecs_enum_init(world, &(ecs_enum_desc_t) {

@@ -81,19 +81,35 @@ void ProcessPlayerInputSystem(ecs_iter_t *it){
 
     const MousePosition *mousePos = ecs_singleton_get(it->world, MousePosition);
     const MouseButtonState *mouseState = ecs_singleton_get(it->world, MouseButtonState);
-    int hasClicked = 0;
+    EntitySelectedState *selectedState = ecs_singleton_get_mut(it->world, EntitySelectedState);
+    if(!mouseState->leftDown){
+        selectedState->state = 0;
+    }
+    //This starts at 10000 because it->count will probably not be that big if it->count > 10000 this will break
+    int isDraggingIndex = 10000;
+    if(mouseState->leftDown){
+        for(int i = 0; i < it->count; i++){
+            if(ecs_has(it->world, it->entities[i], IsDragging)){
+                isDraggingIndex = i;
+            }
+        }
+    }
     //inner loop for enities in the table
     for(int i = 0; i < it->count; i++){
+        //This needs to be skipped so I don't remove IsHovering and IsDragging from the selected entity
+        if(i == isDraggingIndex){
+            continue;
+        }
         ecs_entity_t e = it->entities[i];
-        if(isMouseOverRotatedCardECS(o[i], p[i], s[i], r[i], mousePos->x, mousePos->y) && !hasClicked){
+        if(isMouseOverRotatedCardECS(o[i], p[i], s[i], r[i], mousePos->x, mousePos->y) && !selectedState->state){
             ecs_add(it->world, e, IsHovering);
             if(mouseState->leftDown){
                 ecs_add(it->world, e, IsDragging);
+                selectedState->state = 1;
             }
             else{
                 ecs_remove(it->world, e, IsDragging);
             }
-            hasClicked = 1;
         }
         else{
             ecs_remove(it->world, e, IsHovering);

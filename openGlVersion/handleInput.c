@@ -82,17 +82,16 @@ void ProcessPlayerInputSystem(ecs_iter_t *it){
     const MousePosition *mousePos = ecs_singleton_get(it->world, MousePosition);
     const MouseButtonState *mouseState = ecs_singleton_get(it->world, MouseButtonState);
     EntitySelectedState *selectedState = ecs_singleton_get_mut(it->world, EntitySelectedState);
-    if(!mouseState->leftDown){
-        selectedState->state = 0;
-    }
-    //This starts at 10000 because it->count will probably not be that big if it->count > 10000 this will break
-    int isDraggingIndex = 10000;
+    int isDraggingIndex = -1;
     if(mouseState->leftDown){
         for(int i = 0; i < it->count; i++){
             if(ecs_has(it->world, it->entities[i], IsDragging)){
                 isDraggingIndex = i;
             }
         }
+    }
+    else{
+        selectedState->state = 0;
     }
     //inner loop for enities in the table
     for(int i = 0; i < it->count; i++){

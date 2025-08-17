@@ -155,7 +155,7 @@ void layoutGameStateSystem(ecs_iter_t *it){
         if(zone[i].zone == ZONE_HAND){
             int handSize = handSizes->playerHandSize[playerId];
             float handCenterX = WIDTH / 2.0f;
-            float handCenterY = (playerId == PLAYER0) ? 180.0f : 1000.0f;
+            float handCenterY = (playerId == PLAYER0) ? 80.0f : 1000.0f;
 
             //float radius = 1000.0f;
             float radius = handSize * 200.0f;
@@ -339,7 +339,7 @@ void initGameStateECS(ecs_world_t *world){
     glUniformMatrix4fv(glGetUniformLocation(cardProgram, "projection"), 1, GL_FALSE, (float*) projection);
 
     for(int playerId = 0; playerId < 2; playerId++){
-        for(int i = 0; i < 5; i++){
+        for(int i = 0; i < 7; i++){
             initUnitECS(world, (ManaCost){0}, (Name){"OrcaUnit"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture}, (Zone){ZONE_BOARD});
             initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture}, (Zone){ZONE_HAND});
         }

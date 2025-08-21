@@ -1,0 +1,54 @@
+{
+  "name": "#601",
+  "tags": [
+    "components.CardTag"
+  ],
+  "components": {
+    "components.Zone": {
+      "zone": "ZONE_HAND"
+    },
+    "components.ManaCost": {
+      "manaCost": 0
+    },
+    "components.Attack": {
+      "attack": 1
+    },
+    "components.Health": {
+      "health": 1
+    },
+    "components.CardType": {
+      "type": "CARDTYPE_UNIT"
+    },
+    "components.Owner": {
+      "playerId": 0
+    },
+    "components.Name": {
+      "name": "Tiny Penguin"
+    },
+    "components.ArtPath": {
+      "artPath": ""
+    },
+    "components.EffectText": {
+      "effectText": ""
+    },
+    "components.Index": {
+      "index": 1
+    },
+    "components.Position": {
+      "x": 0,
+      "y": 0
+    },
+    "components.Size": {
+      "width": 0,
+      "height": 0
+    },
+    "components.Rotation": {
+      "angle": 0
+    },
+    "components.Render": {
+      "shaderProgram": 3,
+      "vao": 1,
+      "texture": 1
+    }
+  }
+}

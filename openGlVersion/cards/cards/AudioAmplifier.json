@@ -1,0 +1,54 @@
+{
+  "name": "#600",
+  "tags": [
+    "components.CardTag"
+  ],
+  "components": {
+    "components.Zone": {
+      "zone": "ZONE_HAND"
+    },
+    "components.ManaCost": {
+      "manaCost": 2
+    },
+    "components.Attack": {
+      "attack": 4
+    },
+    "components.Health": {
+      "health": 1
+    },
+    "components.CardType": {
+      "type": "CARDTYPE_UNIT"
+    },
+    "components.Owner": {
+      "playerId": 0
+    },
+    "components.Name": {
+      "name": "Audio Amplifer"
+    },
+    "components.ArtPath": {
+      "artPath": ""
+    },
+    "components.EffectText": {
+      "effectText": "Play: For the rest of the game, your maximum mana and hand size are increased to 11!"
+    },
+    "components.Index": {
+      "index": 0
+    },
+    "components.Position": {
+      "x": 0,
+      "y": 0
+    },
+    "components.Size": {
+      "width": 0,
+      "height": 0
+    },
+    "components.Rotation": {
+      "angle": 0
+    },
+    "components.Render": {
+      "shaderProgram": 3,
+      "vao": 1,
+      "texture": 1
+    }
+  }
+}

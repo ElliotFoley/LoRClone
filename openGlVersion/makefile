@@ -1,21 +1,41 @@
-# Detect platform
+# -------------------------------------------------
+# Platform detection
+# -------------------------------------------------
 ifeq ($(OS),Windows_NT)
     # Windows (MSYS2 / MinGW)
     LIBS = -lglfw3 -lgdi32 -lopengl32 -lm
+    FREETYPE_CFLAGS =
+    FREETYPE_LIBS   = -lfreetype
 else
-    # Assume Linux
+    # Assume Linux / Unix
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Linux)
+        FREETYPE_CFLAGS := $(shell pkg-config --cflags freetype2)
+        FREETYPE_LIBS   := $(shell pkg-config --libs freetype2)
         LIBS = -lglfw -lGL -lm
     endif
 endif
 
+# -------------------------------------------------
 # Compiler and flags
-CC = gcc
-CFLAGS = -Wall
-SOURCES = main.c glad.c flecs/flecs.c components.c gameLogic.c handleInput.c
-TARGET = main
+# -------------------------------------------------
+CC      = gcc
+CFLAGS  = -Wall $(FREETYPE_CFLAGS)
+LDFLAGS = $(LIBS) $(FREETYPE_LIBS)
 
-# Build rule
-all: $(SOURCES)
-	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCES) $(LIBS)
+# -------------------------------------------------
+# Sources / target
+# -------------------------------------------------
+SOURCES = main.c glad.c flecs/flecs.c components.c gameLogic.c handleInput.c
+TARGET  = main
+
+# -------------------------------------------------
+# Build rules
+# -------------------------------------------------
+all: $(TARGET)
+
+$(TARGET): $(SOURCES)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+clean:
+	rm -f $(TARGET) *.o

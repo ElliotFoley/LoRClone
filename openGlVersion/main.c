@@ -364,6 +364,20 @@ ecs_world_t *initWorldECS(){
 }
 
 
+FT_Library initFont(){
+    FT_Library ft;
+    if(FT_Init_FreeType(&ft)){
+        printf("FreeType font engine failed to start");
+    }
+    FT_Face face;
+    if(FT_New_Face(ft, "fonts/Cinzel-VariableFont_wght.ttf", 0, &face)){
+       printf("font failed to init");
+    }
+
+    return ft;
+}
+
+
 int main(){
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);

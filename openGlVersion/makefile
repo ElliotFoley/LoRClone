@@ -3,9 +3,9 @@
 # -------------------------------------------------
 ifeq ($(OS),Windows_NT)
     # Windows (MSYS2 / MinGW)
-    LIBS = -lglfw3 -lgdi32 -lopengl32 -lm
-    FREETYPE_CFLAGS =
-    FREETYPE_LIBS   = -lfreetype
+    LIBS = -lglfw3 -lgdi32 -lopengl32 -lm -lws2_32
+    FREETYPE_CFLAGS = -IC:/msys64/mingw64/include/freetype2
+    FREETYPE_LIBS   = -LC:/msys64/mingw64/lib -lfreetype
 else
     # Assume Linux / Unix
     UNAME_S := $(shell uname -s)
@@ -15,6 +15,8 @@ else
         LIBS = -lglfw -lGL -lm
     endif
 endif
+
+
 
 # -------------------------------------------------
 # Compiler and flags

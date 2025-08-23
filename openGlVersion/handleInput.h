@@ -1,6 +1,5 @@
 #ifndef HANDLEINPUT_H
 #define HANDLEINPUT_H
-#include "cglm/cglm.h"
 #include "components.h"
 #include <stdbool.h>
 #include <stdio.h>

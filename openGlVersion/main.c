@@ -301,71 +301,6 @@ void drawCard(unsigned int cardProgram, unsigned int cardVAO, unsigned int cardT
 }
 
 
-void drawGameStateSystem(ecs_iter_t *it){
-    Position *pos = ecs_field(it, Position, 0);
-    Size *s = ecs_field(it, Size, 1);
-    Rotation *r = ecs_field(it, Rotation, 2);
-    Render *render = ecs_field(it, Render, 3);
-    for(int i = 0; i < it->count; i++){
-        drawCard(render[i].shaderProgram, render[i].vao, render[i].texture, pos[i].x, pos[i].y, s[i].width, s[i].height, r[i].angle, 0.0);
-        drawCard(render[i].shaderProgram, render[i].vao, render[i].splashArtTexture, pos[i].x, pos[i].y, s[i].width, s[i].height / 2, r[i].angle, s[i].height / 2);
-    }
-}
-
-
-void initMouseECS(ecs_world_t *world){
-
-    ecs_singleton_set(world, MousePosition, {0, 0});
-    ecs_singleton_set(world, MouseButtonState, {0});
-
-}
-
-
-void initGameStateECS(ecs_world_t *world){
-    HandSizes hs = {{0, 0}};
-    ecs_singleton_set_ptr(world, HandSizes, &hs);
-    BoardSizes bs = {{0, 0}};
-    ecs_singleton_set_ptr(world, BoardSizes, &bs);
-    EntitySelectedState es = {0};
-    ecs_singleton_set_ptr(world, EntitySelectedState, &es);
-
-    unsigned int cardVAO = setupCard();
-    unsigned int cardTexture = genTexture("textures/cardTemplate.png");
-    unsigned int splashArtTexture = genTexture("textures/orcaSplashArt.png");
-    unsigned int cardProgram = linkShaders("shaders/cardVertex.glsl", "shaders/cardFragments.glsl");
-
-    glUseProgram(cardProgram);
-
-    glUniform1i(glGetUniformLocation(cardProgram, "cardTexture"), 0);
-    mat4 projection;
-    glm_ortho(0.0f, WIDTH, 0.0f, HEIGHT, -1.0f, 1.0f, projection);
-    glUniformMatrix4fv(glGetUniformLocation(cardProgram, "projection"), 1, GL_FALSE, (float*) projection);
-
-    for(int playerId = 0; playerId < 2; playerId++){
-        for(int i = 0; i < 7; i++){
-            initUnitECS(world, (ManaCost){0}, (Name){"OrcaUnit"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture, splashArtTexture}, (Zone){ZONE_BOARD});
-            initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture, splashArtTexture}, (Zone){ZONE_HAND});
-        }
-    }
-}
-
-
-ecs_world_t *initWorldECS(){
-    ecs_world_t *world = ecs_init();
-
-    // Import the module. This runs the componentsImport function
-    // and registers everything correctly.
-    ECS_IMPORT(world, components);
-    initMouseECS(world);
-    initGameStateECS(world);
-
-    ECS_SYSTEM(world, ProcessPlayerInputSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner);
-    ECS_SYSTEM(world, drawGameStateSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Render);
-    ECS_SYSTEM(world, layoutGameStateSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner, components.Index, components.Zone);
-
-    return world;
-}
-
 //Do note that this only does numbers for now
 void renderText(unsigned int VAO, unsigned int VBO, unsigned int shaderProgram, Character *glyphMap, char *text, int textLen, float x, float y, float scale, vec3 textColor){
 
@@ -464,6 +399,104 @@ void initFontECS(Character *renderChars){
 }
 
 
+void drawCardsAndUnitsSystem(ecs_iter_t *it){
+    Position *pos = ecs_field(it, Position, 0);
+    Size *s = ecs_field(it, Size, 1);
+    Rotation *r = ecs_field(it, Rotation, 2);
+    Render *render = ecs_field(it, Render, 3);
+
+    const RenderText *renderTextComponent = ecs_singleton_get(it->world, RenderText);
+
+    vec3 textColor = {0.0f, 0.0f, 1.0f};
+    for(int i = 0; i < it->count; i++){
+        drawCard(render[i].shaderProgram, render[i].vao, render[i].texture, pos[i].x, pos[i].y, s[i].width, s[i].height, r[i].angle, 0.0);
+        drawCard(render[i].shaderProgram, render[i].vao, render[i].splashArtTexture, pos[i].x, pos[i].y, s[i].width, s[i].height / 2, r[i].angle, s[i].height / 2);
+    }
+
+    renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, renderTextComponent->text, "20", 2, 1700.0f, 400.0f, 1.0, textColor);
+
+
+}
+
+
+void initMouseECS(ecs_world_t *world){
+
+    ecs_singleton_set(world, MousePosition, {0, 0});
+    ecs_singleton_set(world, MouseButtonState, {0});
+
+}
+
+
+void initTextECS(ecs_world_t *world){
+    RenderText renderTextComponent;
+    initFontECS(renderTextComponent.text);
+
+    unsigned int VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6*4, NULL, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    renderTextComponent.VAO = VAO;
+    renderTextComponent.VBO = VBO;
+    renderTextComponent.shaderProgram = linkShaders("shaders/charVertex.glsl", "shaders/charFragments.glsl");
+
+    ecs_singleton_set_ptr(world, RenderText, &renderTextComponent);
+}
+
+
+void initGameStateECS(ecs_world_t *world){
+    HandSizes hs = {{0, 0}};
+    ecs_singleton_set_ptr(world, HandSizes, &hs);
+    BoardSizes bs = {{0, 0}};
+    ecs_singleton_set_ptr(world, BoardSizes, &bs);
+    EntitySelectedState es = {0};
+    ecs_singleton_set_ptr(world, EntitySelectedState, &es);
+
+    unsigned int cardVAO = setupCard();
+    unsigned int cardTexture = genTexture("textures/cardTemplate.png");
+    unsigned int splashArtTexture = genTexture("textures/orcaSplashArt.png");
+    unsigned int cardProgram = linkShaders("shaders/cardVertex.glsl", "shaders/cardFragments.glsl");
+
+    glUseProgram(cardProgram);
+
+    glUniform1i(glGetUniformLocation(cardProgram, "cardTexture"), 0);
+    mat4 projection;
+    glm_ortho(0.0f, WIDTH, 0.0f, HEIGHT, -1.0f, 1.0f, projection);
+    glUniformMatrix4fv(glGetUniformLocation(cardProgram, "projection"), 1, GL_FALSE, (float*) projection);
+
+    for(int playerId = 0; playerId < 2; playerId++){
+        for(int i = 0; i < 7; i++){
+            initUnitECS(world, (ManaCost){0}, (Name){"OrcaUnit"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture, splashArtTexture}, (Zone){ZONE_BOARD});
+            initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture, splashArtTexture}, (Zone){ZONE_HAND});
+        }
+    }
+}
+
+
+ecs_world_t *initWorldECS(){
+    ecs_world_t *world = ecs_init();
+
+    // Import the module. This runs the componentsImport function
+    // and registers everything correctly.
+    ECS_IMPORT(world, components);
+    initMouseECS(world);
+    initGameStateECS(world);
+    initTextECS(world);
+
+    ECS_SYSTEM(world, ProcessPlayerInputSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner);
+    ECS_SYSTEM(world, drawCardsAndUnitsSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Render);
+    ECS_SYSTEM(world, layoutGameStateSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner, components.Index, components.Zone);
+
+    return world;
+}
+
+
 int main(){
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -489,29 +522,11 @@ int main(){
 
     ecs_world_t *world = initWorldECS();
 
-    unsigned int textShaderProgram = linkShaders("shaders/charVertex.glsl", "shaders/charFragments.glsl");
-    //This is temp I need to set it up as an entity once I get it working this way
-    unsigned int VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6*4, NULL, GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-    //TEMP
-    Character digits[10];
-    initFontECS(digits);
-
     unsigned int backGroundVAO = setupBackGround();
     unsigned int backGroundProgram = linkShaders("shaders/backGroundVertex.glsl", "shaders/backGroundFragments.glsl");
     glUseProgram(backGroundProgram);
     unsigned int backGroundTexture = genTexture("textures/Board2.png");
     glUniform1i(glGetUniformLocation(backGroundProgram, "backGroundTexture"), 0);
-
-    vec3 textColor = {0.0f, 0.0f, 1.0f};
 
     while(!glfwWindowShouldClose(window)){
         //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -525,8 +540,6 @@ int main(){
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         ecs_progress(world, 0);
-
-        renderText(VAO, VBO, textShaderProgram, digits, "20", 2, 1700.0f, 400.0f, 1.0, textColor);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

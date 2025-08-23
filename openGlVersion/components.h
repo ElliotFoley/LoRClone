@@ -1,11 +1,18 @@
 #ifndef COMPONENTS_H
 #define COMPONENTS_H
+#include "cglm/cglm.h"
 #include "define.h"
 #include "flecs/flecs.h"
 #include <stdio.h>
 
-// components for cards for ECS
+typedef struct {
+  unsigned int textureId;
+  ivec2 size;
+  ivec2 bearing;
+  unsigned int advance;
+} Character;
 
+// components for cards for ECS
 typedef enum {
   ZONE_DECK,
   ZONE_HAND,
@@ -130,6 +137,14 @@ typedef struct {
   EffectType type;
   int amount;
 } OnEndTurn;
+
+typedef struct {
+  Character text[10];
+  unsigned int VAO;
+  unsigned int VBO;
+  unsigned int shaderProgram;
+} RenderText;
+
 extern ECS_COMPONENT_DECLARE(OnPlay);
 extern ECS_COMPONENT_DECLARE(OnSummon);
 extern ECS_COMPONENT_DECLARE(OnDeath);
@@ -148,6 +163,7 @@ extern ECS_TAG_DECLARE(UnitTag);
 extern ECS_TAG_DECLARE(PlayerTag);
 // extern ECS_TAG_DECLARE(BoardTile);
 
+extern ECS_COMPONENT_DECLARE(RenderText);
 extern ECS_COMPONENT_DECLARE(MousePosition);
 extern ECS_COMPONENT_DECLARE(MouseButtonState);
 extern ECS_COMPONENT_DECLARE(EntitySelectedState);

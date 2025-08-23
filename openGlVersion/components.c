@@ -11,6 +11,7 @@ ECS_TAG_DECLARE(PlayerTag);
 ECS_TAG_DECLARE(IsHovering);
 ECS_TAG_DECLARE(IsDragging);
 
+ECS_COMPONENT_DECLARE(RenderText);
 ECS_COMPONENT_DECLARE(MousePosition);
 ECS_COMPONENT_DECLARE(MouseButtonState);
 ECS_COMPONENT_DECLARE(EntitySelectedState);
@@ -54,6 +55,7 @@ void componentsImport(ecs_world_t *world) {
     ECS_TAG_DEFINE(world, IsDragging);
     //ECS_TAG(world, BoardTile);
 
+    ECS_COMPONENT_DEFINE(world, RenderText);
     ECS_COMPONENT_DEFINE(world, MousePosition);
     ECS_COMPONENT_DEFINE(world, MouseButtonState);
     ECS_COMPONENT_DEFINE(world, EntitySelectedState);

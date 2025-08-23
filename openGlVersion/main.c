@@ -283,12 +283,13 @@ unsigned int setupBackGround(){
 }
 
 
-void drawCard(unsigned int cardProgram, unsigned int cardVAO, unsigned int cardTexture, float xpos, float ypos, float xscale, float yscale, float rotation){
+void drawCard(unsigned int cardProgram, unsigned int cardVAO, unsigned int cardTexture, float xpos, float ypos, float xscale, float yscale, float rotation, float localYOffset){
     mat4 model;
     vec3 translate = {xpos, ypos, 0.0f};
     glm_mat4_identity(model);
     glm_translate(model, translate);
     glm_rotate_z(model, glm_rad(rotation), model);
+    glm_translate(model, (vec3){0.0f, localYOffset, 0.0f});
     glm_scale(model, (vec3){xscale, yscale, 1.0f});
     glUseProgram(cardProgram);
     glBindTexture(GL_TEXTURE_2D, cardTexture);
@@ -306,7 +307,8 @@ void drawGameStateSystem(ecs_iter_t *it){
     Rotation *r = ecs_field(it, Rotation, 2);
     Render *render = ecs_field(it, Render, 3);
     for(int i = 0; i < it->count; i++){
-        drawCard(render[i].shaderProgram, render[i].vao, render[i].texture, pos[i].x, pos[i].y, s[i].width, s[i].height, r[i].angle);
+        drawCard(render[i].shaderProgram, render[i].vao, render[i].texture, pos[i].x, pos[i].y, s[i].width, s[i].height, r[i].angle, 0.0);
+        drawCard(render[i].shaderProgram, render[i].vao, render[i].splashArtTexture, pos[i].x, pos[i].y, s[i].width, s[i].height / 2, r[i].angle, s[i].height / 2);
     }
 }
 
@@ -328,7 +330,8 @@ void initGameStateECS(ecs_world_t *world){
     ecs_singleton_set_ptr(world, EntitySelectedState, &es);
 
     unsigned int cardVAO = setupCard();
-    unsigned int cardTexture = genTexture("textures/Orca.png");
+    unsigned int cardTexture = genTexture("textures/cardTemplate.png");
+    unsigned int splashArtTexture = genTexture("textures/orcaSplashArt.png");
     unsigned int cardProgram = linkShaders("shaders/cardVertex.glsl", "shaders/cardFragments.glsl");
 
     glUseProgram(cardProgram);
@@ -340,8 +343,8 @@ void initGameStateECS(ecs_world_t *world){
 
     for(int playerId = 0; playerId < 2; playerId++){
         for(int i = 0; i < 7; i++){
-            initUnitECS(world, (ManaCost){0}, (Name){"OrcaUnit"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture}, (Zone){ZONE_BOARD});
-            initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture}, (Zone){ZONE_HAND});
+            initUnitECS(world, (ManaCost){0}, (Name){"OrcaUnit"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture, splashArtTexture}, (Zone){ZONE_BOARD});
+            initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture, splashArtTexture}, (Zone){ZONE_HAND});
         }
     }
 }

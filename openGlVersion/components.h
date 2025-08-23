@@ -71,6 +71,7 @@ typedef struct {
   unsigned int shaderProgram;
   unsigned int vao;
   unsigned int texture;
+  unsigned int splashArtTexture;
 } Render;
 
 typedef struct {

@@ -12,4 +12,11 @@ typedef struct {
   ecs_entity_t mouseEntity;
 } DataWrapper;
 
+typedef struct {
+  unsigned int textureId;
+  ivec2 size;
+  ivec2 bearing;
+  unsigned int advance;
+} Character;
+
 #endif

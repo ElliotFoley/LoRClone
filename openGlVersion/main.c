@@ -363,18 +363,101 @@ ecs_world_t *initWorldECS(){
     return world;
 }
 
+//Do note that this only does numbers for now
+void renderText(unsigned int VAO, unsigned int VBO, unsigned int shaderProgram, Character *glyphMap, char *text, int textLen, float x, float y, float scale, vec3 textColor){
 
-FT_Library initFont(){
+    glUseProgram(shaderProgram);
+    mat4 projection;
+    glm_ortho(0.0f, WIDTH, 0.0f, HEIGHT, -1.0f, 1.0f, projection);
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, (float*) projection);
+
+    glUniform1i(glGetUniformLocation(shaderProgram, "text"), 0);
+
+    glUniform3f(glGetUniformLocation(shaderProgram, "textColor"), textColor[0], textColor[1], textColor[2]);
+    glActiveTexture(GL_TEXTURE0);
+    glBindVertexArray(VAO);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    for(int i = 0; i < textLen; i++){
+        Character ch = glyphMap[text[i] - '0'];
+
+        float xpos = x + ch.bearing[0] * scale;
+        float ypos = y + (ch.size[1] - ch.bearing[1]) * scale;
+
+        float w = ch.size[0] * scale;
+        float h = ch.size[1] * scale;
+        float vertices[6][4] = {
+            {xpos, ypos + h, 0.0f, 0.0f},
+            {xpos, ypos, 0.0f, 1.0f},
+            {xpos + w, ypos, 1.0f, 1.0f},
+            {xpos, ypos + h, 0.0f, 0.0f},
+            {xpos + w, ypos, 1.0f, 1.0f},
+            {xpos + w, ypos + h, 1.0f, 0.0f},
+        };
+        glBindTexture(GL_TEXTURE_2D, ch.textureId);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        //advance is in 1/64 pixels, don't ask me why.
+        x += (ch.advance >> 6) * scale;
+    }
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+
+void initFontECS(Character *renderChars){
     FT_Library ft;
     if(FT_Init_FreeType(&ft)){
         printf("FreeType font engine failed to start");
+        return;
     }
     FT_Face face;
     if(FT_New_Face(ft, "fonts/Cinzel-VariableFont_wght.ttf", 0, &face)){
        printf("font failed to init");
+       return;
     }
 
-    return ft;
+    FT_Set_Pixel_Sizes(face, 0, 48); // choose a height that makes sense for your game
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // no byte-alignment restriction
+    for(int i = 0; i < 10; i++){
+        if(FT_Load_Char(face, i + '0', FT_LOAD_RENDER)){
+            printf("Failed to load Glyph: %c\n", i + '0');
+            continue;
+        }
+        unsigned int texture;
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RED,
+            face->glyph->bitmap.width,
+            face->glyph->bitmap.rows,
+            0,
+            GL_RED,
+            GL_UNSIGNED_BYTE,
+            face->glyph->bitmap.buffer
+        );
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        renderChars[i].textureId = texture;
+        renderChars[i].size[0] = face->glyph->bitmap.width;
+        renderChars[i].size[1] = face->glyph->bitmap.rows;
+        renderChars[i].bearing[0] = face->glyph->bitmap_left;
+        renderChars[i].bearing[1] = face->glyph->bitmap_top;
+        renderChars[i].advance = face->glyph->advance.x;
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+    FT_Done_Face(face);
+    FT_Done_FreeType(ft);
 }
 
 
@@ -403,11 +486,29 @@ int main(){
 
     ecs_world_t *world = initWorldECS();
 
+    unsigned int textShaderProgram = linkShaders("shaders/charVertex.glsl", "shaders/charFragments.glsl");
+    //This is temp I need to set it up as an entity once I get it working this way
+    unsigned int VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6*4, NULL, GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    //TEMP
+    Character digits[10];
+    initFontECS(digits);
+
     unsigned int backGroundVAO = setupBackGround();
     unsigned int backGroundProgram = linkShaders("shaders/backGroundVertex.glsl", "shaders/backGroundFragments.glsl");
     glUseProgram(backGroundProgram);
     unsigned int backGroundTexture = genTexture("textures/Board2.png");
     glUniform1i(glGetUniformLocation(backGroundProgram, "backGroundTexture"), 0);
+
+    vec3 textColor = {0.0f, 0.0f, 1.0f};
 
     while(!glfwWindowShouldClose(window)){
         //glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -421,6 +522,8 @@ int main(){
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
         ecs_progress(world, 0);
+
+        renderText(VAO, VBO, textShaderProgram, digits, "20", 2, 1700.0f, 400.0f, 1.0, textColor);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

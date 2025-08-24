@@ -302,14 +302,15 @@ void drawCard(unsigned int cardProgram, unsigned int cardVAO, unsigned int cardT
 
 
 //Do note that this only does numbers for now
-void renderText(unsigned int VAO, unsigned int VBO, unsigned int shaderProgram, Character *glyphMap, char *text, int textLen, float x, float y, float scale, vec3 textColor){
+void renderText(unsigned int VAO, unsigned int VBO, unsigned int shaderProgram, Character *glyphMap, char *text, float x, float y, float scale, float rotation, vec3 textColor, float localYOffset){
 
     glUseProgram(shaderProgram);
-    mat4 projection;
-    glm_ortho(0.0f, WIDTH, 0.0f, HEIGHT, -1.0f, 1.0f, projection);
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, (float*) projection);
-
-    glUniform1i(glGetUniformLocation(shaderProgram, "text"), 0);
+    mat4 model;
+    glm_mat4_identity(model);
+    glm_translate(model, (vec3){x, y, 0.0f});
+    glm_rotate_z(model, glm_rad(rotation), model);
+    glm_translate(model, (vec3){0.0f, localYOffset, 0.0f});
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, (float *)model);
 
     glUniform3f(glGetUniformLocation(shaderProgram, "textColor"), textColor[0], textColor[1], textColor[2]);
     glActiveTexture(GL_TEXTURE0);
@@ -318,11 +319,15 @@ void renderText(unsigned int VAO, unsigned int VBO, unsigned int shaderProgram, 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    for(int i = 0; i < textLen; i++){
+    float cursorX = 0.0f;
+
+    for(int i = 0; text[i] != '\0'; i++){
         Character ch = glyphMap[text[i] - '0'];
 
-        float xpos = x + ch.bearing[0] * scale;
-        float ypos = y + (ch.size[1] - ch.bearing[1]) * scale;
+        //float xpos = x + ch.bearing[0] * scale;
+        //float ypos = y + (ch.size[1] - ch.bearing[1]) * scale;
+        float xpos = cursorX + ch.bearing[0] * scale;
+        float ypos = 0.0f + (ch.size[1] - ch.bearing[1]) * scale;
 
         float w = ch.size[0] * scale;
         float h = ch.size[1] * scale;
@@ -340,7 +345,7 @@ void renderText(unsigned int VAO, unsigned int VBO, unsigned int shaderProgram, 
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         //advance is in 1/64 pixels, don't ask me why.
-        x += (ch.advance >> 6) * scale;
+        cursorX += (ch.advance >> 6) * scale;
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -404,16 +409,23 @@ void drawCardsAndUnitsSystem(ecs_iter_t *it){
     Size *s = ecs_field(it, Size, 1);
     Rotation *r = ecs_field(it, Rotation, 2);
     Render *render = ecs_field(it, Render, 3);
+    Health *health = ecs_field(it, Health, 4);
 
     const RenderText *renderTextComponent = ecs_singleton_get(it->world, RenderText);
 
     vec3 textColor = {0.0f, 0.0f, 1.0f};
+
+    char buffer[3];
+
     for(int i = 0; i < it->count; i++){
+        snprintf(buffer, sizeof(buffer), "%d", health[i].health);
+
         drawCard(render[i].shaderProgram, render[i].vao, render[i].texture, pos[i].x, pos[i].y, s[i].width, s[i].height, r[i].angle, 0.0);
         drawCard(render[i].shaderProgram, render[i].vao, render[i].splashArtTexture, pos[i].x, pos[i].y, s[i].width, s[i].height / 2, r[i].angle, s[i].height / 2);
+        renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, (Character *)renderTextComponent->text, buffer, pos[i].x, pos[i].y, 1.0, r[i].angle, textColor, 0);
     }
 
-    renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, renderTextComponent->text, "20", 2, 1700.0f, 400.0f, 1.0, textColor);
+    renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, (Character *)renderTextComponent->text, "20", 1700.0f, 400.0f, 1.0, 0.0f, textColor, 0);
 
 
 }
@@ -446,6 +458,12 @@ void initTextECS(ecs_world_t *world){
     renderTextComponent.VBO = VBO;
     renderTextComponent.shaderProgram = linkShaders("shaders/charVertex.glsl", "shaders/charFragments.glsl");
 
+    glUseProgram(renderTextComponent.shaderProgram);
+    glUniform1i(glGetUniformLocation(renderTextComponent.shaderProgram, "text"), 0);
+    mat4 projection;
+    glm_ortho(0.0f, WIDTH, 0.0f, HEIGHT, -1.0f, 1.0f, projection);
+    glUniformMatrix4fv(glGetUniformLocation(renderTextComponent.shaderProgram, "projection"), 1, GL_FALSE, (float*) projection);
+
     ecs_singleton_set_ptr(world, RenderText, &renderTextComponent);
 }
 
@@ -461,6 +479,7 @@ void initGameStateECS(ecs_world_t *world){
     unsigned int cardVAO = setupCard();
     unsigned int cardTexture = genTexture("textures/cardTemplate.png");
     unsigned int splashArtTexture = genTexture("textures/orcaSplashArt.png");
+    unsigned int splashArtPenguin = genTexture("textures/penguin.png");
     unsigned int cardProgram = linkShaders("shaders/cardVertex.glsl", "shaders/cardFragments.glsl");
 
     glUseProgram(cardProgram);
@@ -471,11 +490,12 @@ void initGameStateECS(ecs_world_t *world){
     glUniformMatrix4fv(glGetUniformLocation(cardProgram, "projection"), 1, GL_FALSE, (float*) projection);
 
     for(int playerId = 0; playerId < 2; playerId++){
-        for(int i = 0; i < 7; i++){
+        for(int i = 0; i < 5; i++){
             initUnitECS(world, (ManaCost){0}, (Name){"OrcaUnit"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture, splashArtTexture}, (Zone){ZONE_BOARD});
             initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture, splashArtTexture}, (Zone){ZONE_HAND});
         }
     }
+    initUnitECS(world, (ManaCost){1}, (Name){"Penguin"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){5}, (Attack){5}, (Owner){0}, (Index){5}, (Render){cardProgram, cardVAO, cardTexture, splashArtPenguin}, (Zone){ZONE_HAND});
 }
 
 
@@ -490,7 +510,7 @@ ecs_world_t *initWorldECS(){
     initTextECS(world);
 
     ECS_SYSTEM(world, ProcessPlayerInputSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner);
-    ECS_SYSTEM(world, drawCardsAndUnitsSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Render);
+    ECS_SYSTEM(world, drawCardsAndUnitsSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Render, components.Health);
     ECS_SYSTEM(world, layoutGameStateSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner, components.Index, components.Zone);
 
     return world;

@@ -13,7 +13,7 @@ typedef struct {
 } DataWrapper;
 
 void renderText(unsigned int VAO, unsigned int VBO, unsigned int shaderProgram,
-                Character *glyphMap, char *text, int textLen, float x, float y,
-                float scale, vec3 textColor);
+                Character *glyphMap, char *text, float x, float y, float scale,
+                float rotation, vec3 textColor, float localYOffset);
 
 #endif

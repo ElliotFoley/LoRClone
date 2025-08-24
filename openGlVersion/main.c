@@ -413,7 +413,7 @@ void drawCardsAndUnitsSystem(ecs_iter_t *it){
 
     const RenderText *renderTextComponent = ecs_singleton_get(it->world, RenderText);
 
-    vec3 textColor = {0.0f, 0.0f, 1.0f};
+    vec3 textColor = {1.0f, 1.0f, 1.0f};
 
     char buffer[3];
 

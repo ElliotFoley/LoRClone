@@ -301,7 +301,21 @@ void drawCard(unsigned int cardProgram, unsigned int cardVAO, unsigned int cardT
 }
 
 
-//Do note that this only does numbers for now
+int charToGlyphIndex(char charToConvert){
+    if(charToConvert >= 'A' && charToConvert <= 'Z'){
+        int captialOffset = 17;
+        return charToConvert - 'A' + captialOffset;
+    }
+    else if(charToConvert >= 'a' && charToConvert <= 'z'){
+        int lowerOffset = 49;
+        return charToConvert - 'a' + lowerOffset;
+    }
+    else{
+        return charToConvert - '0';
+    }
+}
+
+
 void renderText(unsigned int VAO, unsigned int VBO, unsigned int shaderProgram, Character *glyphMap, char *text, float x, float y, float scale, float rotation, vec3 textColor, float localXOffset, float localYOffset){
 
     glUseProgram(shaderProgram);
@@ -322,12 +336,12 @@ void renderText(unsigned int VAO, unsigned int VBO, unsigned int shaderProgram, 
     float cursorX = 0.0f;
 
     for(int i = 0; text[i] != '\0'; i++){
-        Character ch = glyphMap[text[i] - '0'];
+        Character ch = glyphMap[charToGlyphIndex(text[i])];
 
         //float xpos = x + ch.bearing[0] * scale;
         //float ypos = y + (ch.size[1] - ch.bearing[1]) * scale;
         float xpos = cursorX + ch.bearing[0] * scale;
-        float ypos = 0.0f + (ch.size[1] - ch.bearing[1]) * scale;
+        float ypos = (ch.bearing[1] - ch.size[1]) * scale;
 
         float w = ch.size[0] * scale;
         float h = ch.size[1] * scale;
@@ -352,14 +366,14 @@ void renderText(unsigned int VAO, unsigned int VBO, unsigned int shaderProgram, 
 }
 
 
-void initFontECS(Character *renderChars){
+void initFontECS(Character *renderChars, char *fontFilePath){
     FT_Library ft;
     if(FT_Init_FreeType(&ft)){
         printf("FreeType font engine failed to start");
         return;
     }
     FT_Face face;
-    if(FT_New_Face(ft, "fonts/Cinzel-VariableFont_wght.ttf", 0, &face)){
+    if(FT_New_Face(ft, fontFilePath, 0, &face)){
        printf("font failed to init");
        return;
     }
@@ -367,7 +381,7 @@ void initFontECS(Character *renderChars){
     FT_Set_Pixel_Sizes(face, 0, 48); // choose a height that makes sense for your game
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // no byte-alignment restriction
-    for(int i = 0; i < 10; i++){
+    for(int i = 0; i < 75; i++){
         if(FT_Load_Char(face, i + '0', FT_LOAD_RENDER)){
             printf("Failed to load Glyph: %c\n", i + '0');
             continue;
@@ -477,7 +491,7 @@ void drawCardsAndUnitsSystem(ecs_iter_t *it){
         drawFullEntity(render[i], pos[i], s[i], r[i], health[i], manaCost[i], attack[i], renderTextComponent, textScale, textColor);
     }
 
-    renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, (Character *)renderTextComponent->text, "20", 1700.0f, 400.0f, 1.0, 0.0f, textColor, 0, 0);
+    renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, (Character *)renderTextComponent->text, "ACy", 1700.0f, 400.0f, 1.0, 0.0f, textColor, 0, 0);
 
 
 }
@@ -493,7 +507,7 @@ void initMouseECS(ecs_world_t *world){
 
 void initTextECS(ecs_world_t *world){
     RenderText renderTextComponent;
-    initFontECS(renderTextComponent.text);
+    initFontECS(renderTextComponent.text, "fonts/Merriweather_24pt-SemiBold.ttf");
 
     unsigned int VAO, VBO;
     glGenVertexArrays(1, &VAO);

@@ -139,7 +139,7 @@ typedef struct {
 } OnEndTurn;
 
 typedef struct {
-  Character text[10];
+  Character text[75];
   unsigned int VAO;
   unsigned int VBO;
   unsigned int shaderProgram;

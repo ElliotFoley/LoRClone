@@ -1,6 +1,8 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#include <ctype.h>
+
 #include "gameLogic.h"
 
 #include "glad/glad.h"

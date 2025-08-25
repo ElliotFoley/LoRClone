@@ -422,7 +422,7 @@ void getTextOffset(enum TextAnchor anchor, Size size, vec2 out) {
     switch (anchor) {
         case ANCHOR_BOTTOM_LEFT:
             out[0] = size.width / 20.0f;
-            out[1] = size.height / 20.0f;
+            out[1] = size.height / 22.0f;
             break;
         case ANCHOR_TOP_LEFT:
             out[0] = size.width / 20.0f;
@@ -430,7 +430,11 @@ void getTextOffset(enum TextAnchor anchor, Size size, vec2 out) {
             break;
         case ANCHOR_BOTTOM_RIGHT:
             out[0] = size.width - size.width / 5.0f;
-            out[1] = size.height / 20.0f;
+            out[1] = size.height / 22.0f;
+            break;
+        case ANCHOR_NAME:
+            out[0] = size.width / 3;
+            out[1] = size.height / 3;
             break;
         default:
             out[0] = 0.0f;
@@ -440,7 +444,7 @@ void getTextOffset(enum TextAnchor anchor, Size size, vec2 out) {
 }
 
 
-void drawFullEntity(Render render, Position pos, Size size, Rotation r, Health health, ManaCost manaCost, Attack attack, const RenderText *renderTextComponent, float textScale, vec3 textColor){
+void drawFullEntity(Render render, Position pos, Size size, Rotation r, Health health, ManaCost manaCost, Attack attack, Name name, const RenderText *renderTextComponent, float textScale, vec3 textColor){
     //Rendering card template
     drawCard(render.shaderProgram, render.vao, render.texture, pos.x, pos.y, size.width, size.height, r.angle, 0.0);
 
@@ -466,6 +470,11 @@ void drawFullEntity(Render render, Position pos, Size size, Rotation r, Health h
     vec2 attackOffset;
     getTextOffset(ANCHOR_BOTTOM_RIGHT, size, attackOffset);
     renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, (Character *)renderTextComponent->text, buffer, pos.x, pos.y, 0.5f * textScale, r.angle, textColor, attackOffset[0], attackOffset[1]);
+
+    //Rendering Name
+    vec3 nameOffset;
+    getTextOffset(ANCHOR_NAME, size, nameOffset);
+    renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, (Character *)renderTextComponent->text, name.name, pos.x, pos.y, 0.25f * textScale, r.angle, textColor, nameOffset[0], nameOffset[1]);
 }
 
 
@@ -477,6 +486,7 @@ void drawCardsAndUnitsSystem(ecs_iter_t *it){
     Health *health = ecs_field(it, Health, 4);
     ManaCost *manaCost = ecs_field(it, ManaCost, 5);
     Attack *attack = ecs_field(it, Attack, 6);
+    Name *name = ecs_field(it, Name, 7);
 
     const RenderText *renderTextComponent = ecs_singleton_get(it->world, RenderText);
 
@@ -488,7 +498,7 @@ void drawCardsAndUnitsSystem(ecs_iter_t *it){
         if(ecs_has_id(it->world, it->entities[i], IsHovering)){
             textScale = 1.5f;
         }
-        drawFullEntity(render[i], pos[i], s[i], r[i], health[i], manaCost[i], attack[i], renderTextComponent, textScale, textColor);
+        drawFullEntity(render[i], pos[i], s[i], r[i], health[i], manaCost[i], attack[i], name[i], renderTextComponent, textScale, textColor);
     }
 
     renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, (Character *)renderTextComponent->text, "ACy", 1700.0f, 400.0f, 1.0, 0.0f, textColor, 0, 0);
@@ -557,8 +567,8 @@ void initGameStateECS(ecs_world_t *world){
 
     for(int playerId = 0; playerId < 2; playerId++){
         for(int i = 0; i < 6; i++){
-            initUnitECS(world, (ManaCost){0}, (Name){"OrcaUnit"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture, splashArtTexture}, (Zone){ZONE_BOARD});
-            initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture, splashArtTexture}, (Zone){ZONE_HAND});
+            initUnitECS(world, (ManaCost){0}, (Name){"OrcaUnit"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){9}, (Attack){9}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture, splashArtTexture}, (Zone){ZONE_BOARD});
+            initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){9}, (Attack){9}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture, splashArtTexture}, (Zone){ZONE_HAND});
         }
     }
     initCardECS(world, (ManaCost){2}, (Name){"Penguin"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){5}, (Attack){5}, (CardType){0}, (Owner){PLAYER0}, (Index){6}, (Render){cardProgram, cardVAO, cardTexture, splashArtPenguin}, (Zone){ZONE_HAND});
@@ -576,7 +586,7 @@ ecs_world_t *initWorldECS(){
     initTextECS(world);
 
     ECS_SYSTEM(world, ProcessPlayerInputSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner);
-    ECS_SYSTEM(world, drawCardsAndUnitsSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Render, components.Health, components.ManaCost, components.Attack);
+    ECS_SYSTEM(world, drawCardsAndUnitsSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Render, components.Health, components.ManaCost, components.Attack, components.Name);
     ECS_SYSTEM(world, layoutGameStateSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner, components.Index, components.Zone);
 
     return world;

@@ -14,6 +14,7 @@ typedef struct {
 
 void renderText(unsigned int VAO, unsigned int VBO, unsigned int shaderProgram,
                 Character *glyphMap, char *text, float x, float y, float scale,
-                float rotation, vec3 textColor, float localYOffset);
+                float rotation, vec3 textColor, float localXOffset,
+                float localYOffset);
 
 #endif

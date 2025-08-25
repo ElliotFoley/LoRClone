@@ -302,14 +302,14 @@ void drawCard(unsigned int cardProgram, unsigned int cardVAO, unsigned int cardT
 
 
 //Do note that this only does numbers for now
-void renderText(unsigned int VAO, unsigned int VBO, unsigned int shaderProgram, Character *glyphMap, char *text, float x, float y, float scale, float rotation, vec3 textColor, float localYOffset){
+void renderText(unsigned int VAO, unsigned int VBO, unsigned int shaderProgram, Character *glyphMap, char *text, float x, float y, float scale, float rotation, vec3 textColor, float localXOffset, float localYOffset){
 
     glUseProgram(shaderProgram);
     mat4 model;
     glm_mat4_identity(model);
     glm_translate(model, (vec3){x, y, 0.0f});
     glm_rotate_z(model, glm_rad(rotation), model);
-    glm_translate(model, (vec3){0.0f, localYOffset, 0.0f});
+    glm_translate(model, (vec3){localXOffset, localYOffset, 0.0f});
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, (float *)model);
 
     glUniform3f(glGetUniformLocation(shaderProgram, "textColor"), textColor[0], textColor[1], textColor[2]);
@@ -404,6 +404,23 @@ void initFontECS(Character *renderChars){
 }
 
 
+void drawFullEntity(Render render, Position pos, Size size, Rotation r, Health health, const RenderText *renderTextComponent, float textScale, vec3 textColor){
+    //Creating buffer for health text and loading it
+    char buffer[3];
+    snprintf(buffer, sizeof(buffer), "%d", health.health);
+
+    //Rendering card template
+    drawCard(render.shaderProgram, render.vao, render.texture, pos.x, pos.y, size.width, size.height, r.angle, 0.0);
+
+    //Rendering spalsh art
+    drawCard(render.shaderProgram, render.vao, render.splashArtTexture, pos.x, pos.y, size.width, size.height / 2, r.angle, size.height / 2);
+
+    //Rendering Health Text
+    renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, (Character *)renderTextComponent->text, buffer, pos.x, pos.y, 0.5f * textScale, r.angle, textColor, size.width / 20, size.height / 20);
+
+}
+
+
 void drawCardsAndUnitsSystem(ecs_iter_t *it){
     Position *pos = ecs_field(it, Position, 0);
     Size *s = ecs_field(it, Size, 1);
@@ -415,17 +432,16 @@ void drawCardsAndUnitsSystem(ecs_iter_t *it){
 
     vec3 textColor = {1.0f, 1.0f, 1.0f};
 
-    char buffer[3];
 
     for(int i = 0; i < it->count; i++){
-        snprintf(buffer, sizeof(buffer), "%d", health[i].health);
-
-        drawCard(render[i].shaderProgram, render[i].vao, render[i].texture, pos[i].x, pos[i].y, s[i].width, s[i].height, r[i].angle, 0.0);
-        drawCard(render[i].shaderProgram, render[i].vao, render[i].splashArtTexture, pos[i].x, pos[i].y, s[i].width, s[i].height / 2, r[i].angle, s[i].height / 2);
-        renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, (Character *)renderTextComponent->text, buffer, pos[i].x, pos[i].y, 1.0, r[i].angle, textColor, 0);
+        float textScale = 1.0f;
+        if(ecs_has_id(it->world, it->entities[i], IsHovering)){
+            textScale = 1.5f;
+        }
+        drawFullEntity(render[i], pos[i], s[i], r[i], health[i], renderTextComponent, textScale, textColor);
     }
 
-    renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, (Character *)renderTextComponent->text, "20", 1700.0f, 400.0f, 1.0, 0.0f, textColor, 0);
+    renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, (Character *)renderTextComponent->text, "20", 1700.0f, 400.0f, 1.0, 0.0f, textColor, 0, 0);
 
 
 }
@@ -490,12 +506,12 @@ void initGameStateECS(ecs_world_t *world){
     glUniformMatrix4fv(glGetUniformLocation(cardProgram, "projection"), 1, GL_FALSE, (float*) projection);
 
     for(int playerId = 0; playerId < 2; playerId++){
-        for(int i = 0; i < 5; i++){
+        for(int i = 0; i < 6; i++){
             initUnitECS(world, (ManaCost){0}, (Name){"OrcaUnit"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture, splashArtTexture}, (Zone){ZONE_BOARD});
             initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture, splashArtTexture}, (Zone){ZONE_HAND});
         }
     }
-    initUnitECS(world, (ManaCost){1}, (Name){"Penguin"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){5}, (Attack){5}, (Owner){0}, (Index){5}, (Render){cardProgram, cardVAO, cardTexture, splashArtPenguin}, (Zone){ZONE_HAND});
+    initCardECS(world, (ManaCost){0}, (Name){"Penguin"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){5}, (Attack){5}, (CardType){0}, (Owner){PLAYER0}, (Index){6}, (Render){cardProgram, cardVAO, cardTexture, splashArtPenguin}, (Zone){ZONE_HAND});
 }
 
 

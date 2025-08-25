@@ -404,20 +404,54 @@ void initFontECS(Character *renderChars){
 }
 
 
-void drawFullEntity(Render render, Position pos, Size size, Rotation r, Health health, const RenderText *renderTextComponent, float textScale, vec3 textColor){
-    //Creating buffer for health text and loading it
-    char buffer[3];
-    snprintf(buffer, sizeof(buffer), "%d", health.health);
+void getTextOffset(enum TextAnchor anchor, Size size, vec2 out) {
+    switch (anchor) {
+        case ANCHOR_BOTTOM_LEFT:
+            out[0] = size.width / 20.0f;
+            out[1] = size.height / 20.0f;
+            break;
+        case ANCHOR_TOP_LEFT:
+            out[0] = size.width / 20.0f;
+            out[1] = size.height - size.height / 8.0f;
+            break;
+        case ANCHOR_BOTTOM_RIGHT:
+            out[0] = size.width - size.width / 5.0f;
+            out[1] = size.height / 20.0f;
+            break;
+        default:
+            out[0] = 0.0f;
+            out[1] = 0.0f;
+            break;
+    }
+}
 
+
+void drawFullEntity(Render render, Position pos, Size size, Rotation r, Health health, ManaCost manaCost, Attack attack, const RenderText *renderTextComponent, float textScale, vec3 textColor){
     //Rendering card template
     drawCard(render.shaderProgram, render.vao, render.texture, pos.x, pos.y, size.width, size.height, r.angle, 0.0);
 
     //Rendering spalsh art
     drawCard(render.shaderProgram, render.vao, render.splashArtTexture, pos.x, pos.y, size.width, size.height / 2, r.angle, size.height / 2);
 
+    //Creating buffer for health text and loading it
+    char buffer[3];
+    snprintf(buffer, sizeof(buffer), "%d", health.health);
+    vec2 healthOffset;
+    getTextOffset(ANCHOR_BOTTOM_LEFT, size, healthOffset);
     //Rendering Health Text
-    renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, (Character *)renderTextComponent->text, buffer, pos.x, pos.y, 0.5f * textScale, r.angle, textColor, size.width / 20, size.height / 20);
+    renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, (Character *)renderTextComponent->text, buffer, pos.x, pos.y, 0.5f * textScale, r.angle, textColor, healthOffset[0], healthOffset[1]);
 
+    //Rendering ManaCost text
+    snprintf(buffer, sizeof(buffer), "%d", manaCost.manaCost);
+    vec2 manaCostOffset;
+    getTextOffset(ANCHOR_TOP_LEFT, size, manaCostOffset);
+    renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, (Character *)renderTextComponent->text, buffer, pos.x, pos.y, 0.5f * textScale, r.angle, textColor, manaCostOffset[0], manaCostOffset[1]);
+
+    //Rendering Attack text
+    snprintf(buffer, sizeof(buffer), "%d", attack.attack);
+    vec2 attackOffset;
+    getTextOffset(ANCHOR_BOTTOM_RIGHT, size, attackOffset);
+    renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, (Character *)renderTextComponent->text, buffer, pos.x, pos.y, 0.5f * textScale, r.angle, textColor, attackOffset[0], attackOffset[1]);
 }
 
 
@@ -427,6 +461,8 @@ void drawCardsAndUnitsSystem(ecs_iter_t *it){
     Rotation *r = ecs_field(it, Rotation, 2);
     Render *render = ecs_field(it, Render, 3);
     Health *health = ecs_field(it, Health, 4);
+    ManaCost *manaCost = ecs_field(it, ManaCost, 5);
+    Attack *attack = ecs_field(it, Attack, 6);
 
     const RenderText *renderTextComponent = ecs_singleton_get(it->world, RenderText);
 
@@ -438,7 +474,7 @@ void drawCardsAndUnitsSystem(ecs_iter_t *it){
         if(ecs_has_id(it->world, it->entities[i], IsHovering)){
             textScale = 1.5f;
         }
-        drawFullEntity(render[i], pos[i], s[i], r[i], health[i], renderTextComponent, textScale, textColor);
+        drawFullEntity(render[i], pos[i], s[i], r[i], health[i], manaCost[i], attack[i], renderTextComponent, textScale, textColor);
     }
 
     renderText(renderTextComponent->VAO, renderTextComponent->VBO, renderTextComponent->shaderProgram, (Character *)renderTextComponent->text, "20", 1700.0f, 400.0f, 1.0, 0.0f, textColor, 0, 0);
@@ -511,7 +547,7 @@ void initGameStateECS(ecs_world_t *world){
             initCardECS(world, (ManaCost){0}, (Name){"Orca"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){10}, (Attack){10}, (CardType){0}, (Owner){playerId}, (Index){i}, (Render){cardProgram, cardVAO, cardTexture, splashArtTexture}, (Zone){ZONE_HAND});
         }
     }
-    initCardECS(world, (ManaCost){0}, (Name){"Penguin"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){5}, (Attack){5}, (CardType){0}, (Owner){PLAYER0}, (Index){6}, (Render){cardProgram, cardVAO, cardTexture, splashArtPenguin}, (Zone){ZONE_HAND});
+    initCardECS(world, (ManaCost){2}, (Name){"Penguin"}, (ArtPath){""}, (Rarity){0}, (EffectText){""}, (Health){5}, (Attack){5}, (CardType){0}, (Owner){PLAYER0}, (Index){6}, (Render){cardProgram, cardVAO, cardTexture, splashArtPenguin}, (Zone){ZONE_HAND});
 }
 
 
@@ -526,7 +562,7 @@ ecs_world_t *initWorldECS(){
     initTextECS(world);
 
     ECS_SYSTEM(world, ProcessPlayerInputSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner);
-    ECS_SYSTEM(world, drawCardsAndUnitsSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Render, components.Health);
+    ECS_SYSTEM(world, drawCardsAndUnitsSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Render, components.Health, components.ManaCost, components.Attack);
     ECS_SYSTEM(world, layoutGameStateSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner, components.Index, components.Zone);
 
     return world;

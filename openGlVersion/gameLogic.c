@@ -50,10 +50,38 @@ void playCardECS(ecs_iter_t *it, Owner owner, ecs_entity_t cardToPlay){
     for(int i = 0; i < it->count; i++){
         const Owner *eOwner = ecs_get(it->world, it->entities[i], Owner);
         Index *index = ecs_get_mut(it->world, it->entities[i], Index);
-        if(ecs_has(it->world, it->entities[i], CardTag) && eOwner->playerId == owner.playerId && index->index > oldIndex){
+		const Zone *zone = ecs_get(it->world, it->entities[i], Zone);
+        if(zone->zone == ZONE_HAND && eOwner->playerId == owner.playerId && index->index > oldIndex){
             index->index--;
         }
     }
+
+}
+
+void drawCardECS(ecs_iter_t *it, Owner owner){
+	
+	
+	DeckSizes *playerDeckSizes = ecs_singleton_get_mut(it->world, DeckSizes);
+	int cardToDrawI = -1;
+	for(int i = 0; i < it->count; i++){
+        const Owner *eOwner = ecs_get(it->world, it->entities[i], Owner);
+        Index *index = ecs_get_mut(it->world, it->entities[i], Index);
+		const Zone *zone = ecs_get(it->world, it->entities[i], Zone);
+        if(zone->zone == ZONE_DECK && eOwner->playerId == owner.playerId && index->index == playerDeckSizes[owner.playerId] - 1){
+            cardToDrawI = i;
+        }
+    }
+	
+	
+    Zone *cardToPlayZone = ecs_get_mut(it->world, entities[cardToDrawI], Zone);
+    cardToPlayZone->zone = ZONE_HAND;
+    HandSizes *playerHandSizes = ecs_singleton_get_mut(it->world, HandSizes);
+	
+    playerHandSizes->playerHandSize[owner.playerId]++;
+    playerDeckSizes->playerDeckSize[owner.playerId]--;
+    Index *cardToDrawIndex = ecs_get_mut(it->world, entities[cardToDrawI], Index);
+	cardToDrawIndex = playerHandSizes->playerHandSize[owner.playerId] - 1;
+	
 
 }
 

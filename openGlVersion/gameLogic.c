@@ -34,6 +34,33 @@ void playCard(GameState *gameState, int playerId, int cardIndex){
 */
 
 
+void playCardECS(ecs_iter_t *it, Owner owner, ecs_entity_t cardToPlay){
+    Index *cardToPlayIndex = ecs_get_mut(it->world, cardToPlay, Index);
+    BoardSizes *playerBoardSizes = ecs_singleton_get_mut(it->world, BoardSizes);
+    HandSizes *playerHandSizes = ecs_singleton_get_mut(it->world, HandSizes);
+    int oldIndex = cardToPlayIndex->index;
+    cardToPlayIndex->index = playerBoardSizes->playerBoardSize[owner.playerId]++;
+    playerHandSizes->playerHandSize[owner.playerId]--;
+    ecs_remove(it->world, cardToPlay, CardType);
+    ecs_remove(it->world, cardToPlay, CardTag);
+    ecs_add(it->world, cardToPlay, UnitTag);
+
+    for(int i = 0; i < it->count; i++){
+        const Owner *eOwner = ecs_get(it->world, it->entities[i], Owner);
+        Index *index = ecs_get_mut(it->world, it->entities[i], Index);
+        if(ecs_has(it->world, it->entities[i], CardTag) && eOwner->playerId == owner.playerId){
+
+        }
+    }
+
+}
+
+
+void gameStateSystem(ecs_iter_t *it){
+
+}
+
+
 ecs_entity_t initCardECS(ecs_world_t *world, ManaCost manaCost, Name name, ArtPath artPath, Rarity rarity, EffectText effectText, Health health, Attack attack, CardType cardType, Owner owner, Index index, Render render, Zone zone){
     ecs_entity_t card = ecs_new(world);
     //Do note that this copies the data over so these values can go out of scope

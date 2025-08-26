@@ -5,7 +5,7 @@
   ],
   "components": {
     "components.Zone": {
-      "zone": "ZONE_HAND"
+      "zone": "ZONE_DECK"
     },
     "components.ManaCost": {
       "manaCost": 0

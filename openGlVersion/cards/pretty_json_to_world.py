@@ -15,7 +15,7 @@ def card_to_flecs(card_key, card, uid, index):
         "tags": ["components.CardTag"],
         "components": {
             "components.Zone": {
-                "zone": "ZONE_HAND"
+                "zone": "ZONE_DECK"
             },
             "components.ManaCost": {
                 "manaCost": card.get("manaCost", 0)

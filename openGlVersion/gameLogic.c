@@ -87,6 +87,60 @@ ecs_entity_t initUnitECS(ecs_world_t *world, ManaCost manaCost, Name name, ArtPa
 
     return unit;
 }
+
+char *readFileToString(const char *path) {
+    FILE *f = fopen(path, "rb");
+    if (!f) {
+        fprintf(stderr, "Could not open file: %s\n", path);
+        return NULL;
+    }
+
+    fseek(f, 0, SEEK_END);
+    long len = ftell(f);
+    rewind(f);
+
+    char *buf = malloc(len + 1);
+    if (!buf) {
+        fclose(f);
+        return NULL;
+    }
+
+    fread(buf, 1, len, f);
+    buf[len] = '\0';
+    fclose(f);
+
+    return buf;
+}
+
+void decklistToDeckECS(ecs_world_t *world, const char *decklist_path) {
+	FILE *decklist = fopen(decklist_path, "r");
+    if (!decklist) {
+        fprintf(stderr, "Could not open decklist: %s\n", decklist_path);
+        return;
+    }
+
+    char line[512];
+    while (fgets(line, sizeof(line), decklist)) {
+        // Remove trailing newline
+        line[strcspn(line, "\r\n")] = 0;
+
+        // Read JSON file for this card
+        char *json = readFileToString(line);
+        if (!json) continue;
+
+        // Create ECS entity and load JSON into it
+        ecs_entity_t card = ecs_new(world);
+        const char *res = ecs_entity_from_json(world, card, json, NULL);
+		if (!res) {
+			fprintf(stderr, "Failed to parse JSON for entity %llu\n", (unsigned long long)card);
+		}
+
+        free(json);
+    }
+
+    fclose(decklist);
+}
+
 /*
 int updateGameState(GameState* gameState, ProcessedInput* userIntent){
 	InputTarget input = userIntent->target;

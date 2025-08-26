@@ -59,7 +59,9 @@ void playCardECS(ecs_iter_t *it, Owner owner, ecs_entity_t cardToPlay){
 
 
 void gameStateSystem(ecs_iter_t *it){
-
+    Health *health = ecs_field(it, Health, 0);
+    ManaCost *manaCost = ecs_field(it, ManaCost, 1);
+    Attack *attack = ecs_field(it, Attack, 2);
 }
 
 

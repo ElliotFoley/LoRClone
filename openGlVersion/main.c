@@ -588,7 +588,7 @@ ecs_world_t *initWorldECS(){
     ECS_SYSTEM(world, ProcessPlayerInputSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner);
     ECS_SYSTEM(world, drawCardsAndUnitsSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Render, components.Health, components.ManaCost, components.Attack, components.Name);
     ECS_SYSTEM(world, layoutGameStateSystem, EcsOnUpdate, components.Position, components.Size, components.Rotation, components.Owner, components.Index, components.Zone);
-    ECS_SYSTEM(world, gameStateSystem, EcsOnUpdate, components.CardTag, components.UnitTag);
+    ECS_SYSTEM(world, gameStateSystem, EcsOnUpdate, components.Health, components.ManaCost, components.Attack);
 
     return world;
 }

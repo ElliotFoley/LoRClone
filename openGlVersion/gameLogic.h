@@ -18,6 +18,8 @@ ecs_entity_t initUnitECS(ecs_world_t *world, ManaCost manaCost, Name name,
                          Health health, Attack attack, Owner owner, Index index,
                          Render render, Zone zone);
 
+void gameStateSystem(ecs_iter_t *it);
+
 // void resolveAttack(GameState gameState);
 
 #endif

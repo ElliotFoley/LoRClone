@@ -36,6 +36,8 @@ void playCard(GameState *gameState, int playerId, int cardIndex){
 
 void playCardECS(ecs_iter_t *it, Owner owner, ecs_entity_t cardToPlay){
     Index *cardToPlayIndex = ecs_get_mut(it->world, cardToPlay, Index);
+    Zone *cardToPlayZone = ecs_get_mut(it->world, cardToPlay, Zone);
+    cardToPlayZone->zone = ZONE_BOARD;
     BoardSizes *playerBoardSizes = ecs_singleton_get_mut(it->world, BoardSizes);
     HandSizes *playerHandSizes = ecs_singleton_get_mut(it->world, HandSizes);
     int oldIndex = cardToPlayIndex->index;

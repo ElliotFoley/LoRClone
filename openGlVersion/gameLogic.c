@@ -48,8 +48,8 @@ void playCardECS(ecs_iter_t *it, Owner owner, ecs_entity_t cardToPlay){
     for(int i = 0; i < it->count; i++){
         const Owner *eOwner = ecs_get(it->world, it->entities[i], Owner);
         Index *index = ecs_get_mut(it->world, it->entities[i], Index);
-        if(ecs_has(it->world, it->entities[i], CardTag) && eOwner->playerId == owner.playerId){
-
+        if(ecs_has(it->world, it->entities[i], CardTag) && eOwner->playerId == owner.playerId && index->index > oldIndex){
+            index->index--;
         }
     }
 

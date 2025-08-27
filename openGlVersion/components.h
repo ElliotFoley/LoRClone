@@ -90,7 +90,8 @@ typedef struct {
 
 typedef struct {
   int leftDown;
-} MouseButtonState;
+  int numKeys[10];
+} InputState;
 typedef struct {
   int state;
 } EntitySelectedState;
@@ -168,7 +169,7 @@ extern ECS_TAG_DECLARE(PlayerTag);
 
 extern ECS_COMPONENT_DECLARE(RenderText);
 extern ECS_COMPONENT_DECLARE(MousePosition);
-extern ECS_COMPONENT_DECLARE(MouseButtonState);
+extern ECS_COMPONENT_DECLARE(InputState);
 extern ECS_COMPONENT_DECLARE(EntitySelectedState);
 
 extern ECS_COMPONENT_DECLARE(Zone);

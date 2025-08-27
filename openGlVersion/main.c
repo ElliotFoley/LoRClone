@@ -18,8 +18,11 @@ void processInput(GLFWwindow *window, float deltaTime, ecs_world_t *world){
     pos->y = ypos * (double)HEIGHT / winHeight;
     pos->y = HEIGHT - pos->y;
 
-    MouseButtonState *mb = ecs_singleton_get_mut(world, MouseButtonState);
-    mb->leftDown = (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+    InputState *inputState = ecs_singleton_get_mut(world, InputState);
+    inputState->leftDown = (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS);
+    for(int i = 0; i < 10; i++){
+        inputState->numKeys[i] = (glfwGetKey(window, GLFW_KEY_0 + i) == GLFW_PRESS);
+    }
 }
 
 
@@ -510,7 +513,8 @@ void drawCardsAndUnitsSystem(ecs_iter_t *it){
 void initMouseECS(ecs_world_t *world){
 
     ecs_singleton_set(world, MousePosition, {0, 0});
-    ecs_singleton_set(world, MouseButtonState, {0});
+    InputState is = {0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
+    ecs_singleton_set_ptr(world, InputState, &is);
 
 }
 

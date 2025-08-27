@@ -92,10 +92,38 @@ void drawCardECS(ecs_iter_t *it, Owner owner){
 }
 
 
+ecs_entity_t getCardFromIndex(ecs_iter_t *it, Owner owner, int index){
+    for(int i = 0; i < it->count; i++){
+        const Owner *cardOwner = ecs_get(it->world, it->entities[i], Owner);
+        const Index *cardIndex = ecs_get(it->world, it->entities[i], Index);
+        const Zone *zone = ecs_get(it->world, it->entities[i], Zone);
+        if(cardIndex->index == index && cardOwner->playerId == owner.playerId && zone->zone == ZONE_HAND){
+            return it->entities[i];
+        }
+    }
+    return -1;
+}
+
+
 void gameStateSystem(ecs_iter_t *it){
     Health *health = ecs_field(it, Health, 0);
     ManaCost *manaCost = ecs_field(it, ManaCost, 1);
     Attack *attack = ecs_field(it, Attack, 2);
+    InputState *inputState = ecs_singleton_get_mut(it->world, InputState);
+
+    //NEED TO MAKE THIS A PART OF A GAMESTATE COMPONENT
+    Owner playersTurn;
+    playersTurn.playerId = PLAYER0;
+
+    for(int i = 0; i < 10; i++){
+        if(inputState->numKeys[i]){
+            ecs_entity_t cardToPlayId = getCardFromIndex(it, playersTurn, i);
+            if(cardToPlayId != -1){
+                playCardECS(it, playersTurn, cardToPlayId);
+                inputState->numKeys[i] = 0;
+            }
+        }
+    }
 }
 
 

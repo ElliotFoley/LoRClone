@@ -80,10 +80,10 @@ void ProcessPlayerInputSystem(ecs_iter_t *it){
     Owner *o = ecs_field(it, Owner, 3);
 
     const MousePosition *mousePos = ecs_singleton_get(it->world, MousePosition);
-    const MouseButtonState *mouseState = ecs_singleton_get(it->world, MouseButtonState);
+    const InputState *inputState = ecs_singleton_get(it->world, InputState);
     EntitySelectedState *selectedState = ecs_singleton_get_mut(it->world, EntitySelectedState);
     int isDraggingIndex = -1;
-    if(mouseState->leftDown){
+    if(inputState->leftDown){
         for(int i = 0; i < it->count; i++){
             if(ecs_has(it->world, it->entities[i], IsDragging)){
                 isDraggingIndex = i;
@@ -102,7 +102,7 @@ void ProcessPlayerInputSystem(ecs_iter_t *it){
         ecs_entity_t e = it->entities[i];
         if(isMouseOverRotatedCardECS(o[i], p[i], s[i], r[i], mousePos->x, mousePos->y) && !selectedState->state){
             ecs_add(it->world, e, IsHovering);
-            if(mouseState->leftDown){
+            if(inputState->leftDown){
                 ecs_add(it->world, e, IsDragging);
                 selectedState->state = 1;
             }

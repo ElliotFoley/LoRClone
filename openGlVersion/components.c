@@ -29,6 +29,7 @@ ECS_COMPONENT_DECLARE(EffectText);
 ECS_COMPONENT_DECLARE(Index);
 ECS_COMPONENT_DECLARE(HandSizes);
 ECS_COMPONENT_DECLARE(BoardSizes);
+ECS_COMPONENT_DECLARE(DeckSizes);
 ECS_COMPONENT_DECLARE(Position);
 ECS_COMPONENT_DECLARE(Size);
 ECS_COMPONENT_DECLARE(Rotation);
@@ -180,6 +181,14 @@ void componentsImport(ecs_world_t *world) {
         .entity = ecs_id(BoardSizes),
         .members = {
             { .name = "playerUnitSize", .type = ecs_id(ecs_i32_t), .count = 2 }
+        }
+    });
+
+    ECS_COMPONENT_DEFINE(world, DeckSizes);
+    ecs_struct(world, {
+        .entity = ecs_id(DeckSizes),
+        .members = {
+            { .name = "playerDeckSize", .type = ecs_id(ecs_i32_t), .count = 2 }
         }
     });
 

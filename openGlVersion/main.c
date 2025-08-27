@@ -549,6 +549,8 @@ void initGameStateECS(ecs_world_t *world){
     ecs_singleton_set_ptr(world, HandSizes, &hs);
     BoardSizes bs = {{0, 0}};
     ecs_singleton_set_ptr(world, BoardSizes, &bs);
+    DeckSizes ds = {{0, 0}};
+    ecs_singleton_set_ptr(world, DeckSizes, &ds);
     EntitySelectedState es = {0};
     ecs_singleton_set_ptr(world, EntitySelectedState, &es);
 
